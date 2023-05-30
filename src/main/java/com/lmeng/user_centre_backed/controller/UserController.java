@@ -1,6 +1,10 @@
 package com.lmeng.user_centre_backed.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.lmeng.user_centre_backed.common.BaseResponse;
+import com.lmeng.user_centre_backed.common.ErrorCode;
+import com.lmeng.user_centre_backed.common.ResultUtils;
+import com.lmeng.user_centre_backed.exceeption.BaseException;
 import com.lmeng.user_centre_backed.model.User;
 import com.lmeng.user_centre_backed.model.request.UserLoginRequest;
 import com.lmeng.user_centre_backed.model.request.UserRegisterRequest;
@@ -32,65 +36,71 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/register")
-    public Long userRegistry(@RequestBody UserRegisterRequest userRegisterRequest) {
+    public BaseResponse<Long> userRegistry(@RequestBody UserRegisterRequest userRegisterRequest) {
         if(userRegisterRequest == null) {
-            return null;
+            throw new BaseException(ErrorCode.NOT_LOGIN,"");
         }
         String userAccount = userRegisterRequest.getUserAccount();
         String password = userRegisterRequest.getPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
+        String plannetCode = userRegisterRequest.getPlannetCode();
 
         //先做一个简单校验
-        if(StringUtils.isAnyBlank(userAccount,password,checkPassword)) {
-            return null;
+        if(StringUtils.isAnyBlank(userAccount,password,checkPassword,plannetCode)) {
+            throw new BaseException(ErrorCode.PARAMS_ERROR,"账号或密码或星球编号为空");
         }
-        long id = userService.userRegister(userAccount, password, checkPassword);
+        long result = userService.userRegister(userAccount, password, checkPassword,plannetCode);
 
-        return id;
+       // return new BaseResponse<>(0,result,"OK");
+        return ResultUtils.success(result);
     }
 
     @PostMapping("/login")
-    public User userLogin(@RequestBody UserLoginRequest userRegisterRequest, HttpServletRequest request) {
+    public BaseResponse<User> userLogin(@RequestBody UserLoginRequest userRegisterRequest, HttpServletRequest request) {
         if(userRegisterRequest == null) {
-            return null;
+            throw new BaseException(ErrorCode.NOT_LOGIN,"");
         }
         String userAccount = userRegisterRequest.getUserAccount();
         String password = userRegisterRequest.getPassword();
 
         //先做一个简单校验
         if(StringUtils.isAnyBlank(userAccount,password)) {
-            return null;
+            throw new BaseException(ErrorCode.PARAMS_ERROR,"账号或密码为空");
         }
-        return userService.userLogin(userAccount, password, request);
+        User user = userService.userLogin(userAccount, password, request);
+        //return new BaseResponse<>(0,user,"OK");
+        return ResultUtils.success(user);
 
     }
 
     @PostMapping("/logout")
-    public Integer userLogout(HttpServletRequest request) {
+    public BaseResponse<Integer> userLogout(HttpServletRequest request) {
         if(request == null) {
-            return null;
+            throw new BaseException(ErrorCode.PARAMS_ERROR,"");
         }
-        return userService.userLogout(request);
+        int i = userService.userLogout(request);
+        return ResultUtils.success(i);
     }
 
     @GetMapping("/current")
-    public User getCurrentUser(HttpServletRequest request) {
+    public BaseResponse<User> getCurrentUser(HttpServletRequest request) {
         Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
         User currentUser = (User) userObj;
         if(currentUser == null) {
-            return null;
+            throw new BaseException(ErrorCode.NOT_LOGIN);
         }
         long userId = currentUser.getId();
         User user = userService.getById(userId);
         //TODO 校验用户是否合法
-        return userService.getSafetyUser(user);
+        User user1 = userService.getSafetyUser(user);
+        return ResultUtils.success(user1);
     }
 
     @GetMapping("/select")
-    public List<User> selectAll(String username,HttpServletRequest request) {
+    public BaseResponse<List<User>> selectAll(String username,HttpServletRequest request) {
         //先鉴权，仅管理员可以查询
         if(!isAdmin(request)) {
-            return new ArrayList<>();
+            throw new BaseException(ErrorCode.NO_AUTH,"该用户权限不够");
         }
 
         //查询
@@ -100,22 +110,22 @@ public class UserController {
         }
 
         List<User> userList = userService.list(queryWrapper);
-        return userList.stream().map(user -> userService.getSafetyUser(user)).collect(Collectors.toList());
-
+        List<User> list = userList.stream().map(user -> userService.getSafetyUser(user)).collect(Collectors.toList());
+        return ResultUtils.success(list);
         //return userService.list(queryWrapper);
     }
 
     @DeleteMapping
-    public boolean deleteById(@RequestBody long id,HttpServletRequest request) {
+    public BaseResponse<Boolean> deleteById(@RequestBody long id,HttpServletRequest request) {
         if(!isAdmin(request)) {
-            return false;
+            throw new BaseException(ErrorCode.NO_AUTH,"用户权限不够");
         }
 
         if(id <= 0) {
-            return false;
+            throw new BaseException(ErrorCode.PARAMS_ERROR,"要删除的用户不存在");
         }
-
-        return userService.removeById(id);
+        boolean flag = userService.removeById(id);
+        return ResultUtils.success(flag);
     }
 
     /**

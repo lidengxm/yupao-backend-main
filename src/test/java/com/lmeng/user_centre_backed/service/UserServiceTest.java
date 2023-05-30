@@ -46,34 +46,35 @@ class UserServiceTest {
         String userAccount = "yupi";
         String password = "";
         String checkPassword = "123456";
-        long result = userService.userRegister(userAccount, password, checkPassword);
+        String plannetCode = "22342";
+        long result = userService.userRegister(userAccount, password, checkPassword,plannetCode);
         Assertions.assertEquals(-1,result);
 
         userAccount = "yu";
-        result = userService.userRegister(userAccount, password, checkPassword);
+        result = userService.userRegister(userAccount, password, checkPassword,plannetCode);
         Assertions.assertEquals(-1,result);
 
         userAccount = "yupi";
         password = "123456";
-        result = userService.userRegister(userAccount, password, checkPassword);
+        result = userService.userRegister(userAccount, password, checkPassword,plannetCode);
         Assertions.assertEquals(-1,result);
 
         userAccount = "yu pi";
         password = "12345678";
-        result = userService.userRegister(userAccount, password, checkPassword);
+        result = userService.userRegister(userAccount, password, checkPassword,plannetCode);
         Assertions.assertEquals(-1,result);
 
         checkPassword = "123456789";
-        result = userService.userRegister(userAccount, password, checkPassword);
+        result = userService.userRegister(userAccount, password, checkPassword,plannetCode);
         Assertions.assertEquals(-1,result);
 
         userAccount = "dogyupi";
         checkPassword = "12345678";
-        result = userService.userRegister(userAccount, password, checkPassword);
+        result = userService.userRegister(userAccount, password, checkPassword,plannetCode);
         Assertions.assertEquals(-1,result);
 
         userAccount = "yupi";
-        result = userService.userRegister(userAccount, password, checkPassword);
+        result = userService.userRegister(userAccount, password, checkPassword,plannetCode);
         Assertions.assertTrue(result > 0);
 
     }
