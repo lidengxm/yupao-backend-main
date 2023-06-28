@@ -1,17 +1,16 @@
-package com.lmeng.user_centre_backed;
+package com.lmeng.yupao;
 
-import org.apache.ibatis.annotations.Mapper;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 //让spring扫描mapper包下的类
-@MapperScan("com.lmeng.user_centre_backed.mapper")
+@MapperScan("com.lmeng.yupao.mapper")
 @SpringBootApplication
-public class UserCentreBackedApplication {
+public class yupaoApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(UserCentreBackedApplication.class, args);
+        SpringApplication.run(yupaoApplication.class, args);
     }
 
 }

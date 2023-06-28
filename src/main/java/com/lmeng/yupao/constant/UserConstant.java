@@ -1,4 +1,4 @@
-package com.lmeng.user_centre_backed.constant;
+package com.lmeng.yupao.constant;
 
 /**
  * @version 1.0

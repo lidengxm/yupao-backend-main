@@ -1,4 +1,4 @@
-package com.lmeng.user_centre_backed.common;
+package com.lmeng.yupao.common;
 
 /**
  * @version 1.0

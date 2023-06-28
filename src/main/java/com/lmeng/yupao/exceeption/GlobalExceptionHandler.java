@@ -1,8 +1,8 @@
-package com.lmeng.user_centre_backed.exceeption;
+package com.lmeng.yupao.exceeption;
 
-import com.lmeng.user_centre_backed.common.BaseResponse;
-import com.lmeng.user_centre_backed.common.ErrorCode;
-import com.lmeng.user_centre_backed.common.ResultUtils;
+import com.lmeng.yupao.common.BaseResponse;
+import com.lmeng.yupao.common.ErrorCode;
+import com.lmeng.yupao.common.ResultUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;

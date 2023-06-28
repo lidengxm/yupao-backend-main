@@ -1,12 +1,14 @@
-package com.lmeng.user_centre_backed;
+package com.lmeng.yupao;
 
-import com.lmeng.user_centre_backed.mapper.UserMapper;
-import com.lmeng.user_centre_backed.model.User;
+import com.lmeng.yupao.mapper.UserMapper;
+import com.lmeng.yupao.model.User;
+import com.lmeng.yupao.service.UserService;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.annotation.Resource;
+import java.util.Arrays;
 import java.util.List;
 
 @SpringBootTest
@@ -14,6 +16,9 @@ class UserCentreBackedApplicationTests {
 
     @Resource
     private UserMapper userMapper;
+
+    @Resource
+    private UserService userService;
 
     @Test
     void contextLoads() {
@@ -26,6 +31,13 @@ class UserCentreBackedApplicationTests {
     @Test
     void testPassword() {
 
+    }
+
+    @Test
+    public void testSearchUserTags() {
+        List<String> tagNameList = Arrays.asList("java","python");
+        List<User> userList = userService.searchByTags(tagNameList);
+        Assert.assertNotNull(userList);
     }
 
 

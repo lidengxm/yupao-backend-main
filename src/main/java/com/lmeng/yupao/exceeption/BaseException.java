@@ -1,6 +1,6 @@
-package com.lmeng.user_centre_backed.exceeption;
+package com.lmeng.yupao.exceeption;
 
-import com.lmeng.user_centre_backed.common.ErrorCode;
+import com.lmeng.yupao.common.ErrorCode;
 
 /**
  * @version 1.0

@@ -10,10 +10,10 @@
     </parent>
 
     <groupId>com.lmeng</groupId>
-    <artifactId>user_centre_backed</artifactId>
+    <artifactId>yupao-backend-main</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>user_centre_backed</name>
-    <description>user_centre_backed</description>
+    <name>yupao-backend-main</name>
+    <description>yupao-backend-main</description>
 
     <properties>
         <java.version>1.8</java.version>
@@ -28,6 +28,13 @@
             <groupId>org.mybatis.spring.boot</groupId>
             <artifactId>mybatis-spring-boot-starter</artifactId>
             <version>2.3.1</version>
+        </dependency>
+
+        <!---->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.8.6</version>
         </dependency>
 
         <dependency>

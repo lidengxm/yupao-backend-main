@@ -1,25 +1,24 @@
-package com.lmeng.user_centre_backed.controller;
+package com.lmeng.yupao.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.lmeng.user_centre_backed.common.BaseResponse;
-import com.lmeng.user_centre_backed.common.ErrorCode;
-import com.lmeng.user_centre_backed.common.ResultUtils;
-import com.lmeng.user_centre_backed.exceeption.BaseException;
-import com.lmeng.user_centre_backed.model.User;
-import com.lmeng.user_centre_backed.model.request.UserLoginRequest;
-import com.lmeng.user_centre_backed.model.request.UserRegisterRequest;
-import com.lmeng.user_centre_backed.service.UserService;
+import com.lmeng.yupao.common.BaseResponse;
+import com.lmeng.yupao.common.ErrorCode;
+import com.lmeng.yupao.common.ResultUtils;
+import com.lmeng.yupao.exceeption.BaseException;
+import com.lmeng.yupao.model.User;
+import com.lmeng.yupao.model.request.UserLoginRequest;
+import com.lmeng.yupao.model.request.UserRegisterRequest;
+import com.lmeng.yupao.service.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.lmeng.user_centre_backed.constant.UserConstant.ADDMIN_ROLE;
-import static com.lmeng.user_centre_backed.constant.UserConstant.USER_LOGIN_STATE;
+import static com.lmeng.yupao.constant.UserConstant.ADDMIN_ROLE;
+import static com.lmeng.yupao.constant.UserConstant.USER_LOGIN_STATE;
 
 
 /**
