@@ -1,4 +1,6 @@
 spring:
+  profiles:
+    active: dev
   application:
     name: usercentre
   # DataSource Config
@@ -10,6 +12,10 @@ spring:
   #session失效时间
   session:
     timeout: 86400
+  # 解决springfox 3.0.x 版本 和 Spring Boot 2.6.x 版本冲突
+  mvc:
+    path match:
+      matching-strategy: ANT_PATH_MATCHER
 server:
   port: 8080
   servlet:
