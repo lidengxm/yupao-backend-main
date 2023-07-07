@@ -9,9 +9,15 @@ spring:
     url: jdbc:mysql://localhost:3306/usercentre
     username: root
     password: hsp
-  #session失效时间
+  #Redis配置
+  redis:
+    port: 6379
+    host: localhost
+    database: 0
+  #session失效时间（timeout单位 分钟）
   session:
     timeout: 86400
+    store-type: redis
   # 解决springfox 3.0.x 版本 和 Spring Boot 2.6.x 版本冲突
   mvc:
     path match:
