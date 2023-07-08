@@ -6,6 +6,8 @@ import com.lmeng.yupao.mapper.UserMapper;
 import com.lmeng.yupao.model.User;
 import com.lmeng.yupao.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -31,23 +33,43 @@ public class PreCacheJob {
     @Resource
     private RedisTemplate redisTemplate;
 
+    @Resource
+    private RedissonClient redissonClient;
+
     //重点用户
     private List<Long> mainUserList = Arrays.asList();
 
     //每天8点整定时执行预热用户信息
-    @Scheduled(cron = "0 0 8 * * *")
+    @Scheduled(cron = "0 48 13 * * *")
     public void doPreCacheJob() {
-        for (Long userId : mainUserList) {
-            QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-            Page<User> userList = userService.page(new Page(1,20),queryWrapper);
-            String redisKey = String.format("yupao:user:recommend:%s",userId);
-            ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
-            //写入缓存
-            try {
-                valueOperations.set(redisKey,userList,10, TimeUnit.MINUTES);
-            } catch (Exception e) {
-                log.error("redis set key error",e);
+        //Redisson实现分布式锁
+        RLock lock = redissonClient.getLock("yupao:preCacheJob:doPreCache:lock");
+        try {
+            //如果当前线程获得了锁
+            if(lock.tryLock(0,-1,TimeUnit.MILLISECONDS)) {
+                System.out.println("getLock: "+Thread.currentThread().getId());
+                for (Long userId : mainUserList) {
+                    QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+                    Page<User> userList = userService.page(new Page(1,20),queryWrapper);
+                    String redisKey = String.format("yupao:user:recommend:%s",userId);
+                    ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
+                    //写入缓存
+                    try {
+                        valueOperations.set(redisKey,userList,10, TimeUnit.MINUTES);
+                    } catch (Exception e) {
+                        log.error("redis set key error",e);
+                    }
+                }
+            }
+        } catch (InterruptedException e) {
+            log.info("doPreCacheJob error",e);
+        } finally {
+            //执行完任务一定要释放锁（先检查是否是当前线程加的锁）
+            System.out.println("unLock: "+Thread.currentThread().getId());
+            if(lock.isHeldByCurrentThread()) {
+                lock.unlock();
             }
         }
+
     }
 }
