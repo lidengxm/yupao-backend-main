@@ -1,6 +1,6 @@
 package com.lmeng.yupao.mapper;
 
-import com.lmeng.yupao.model.Tag;
+import com.lmeng.yupao.model.domain.Tag;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**

@@ -8,7 +8,7 @@ import com.google.gson.reflect.TypeToken;
 import com.lmeng.yupao.common.ErrorCode;
 import com.lmeng.yupao.constant.UserConstant;
 import com.lmeng.yupao.exceeption.BaseException;
-import com.lmeng.yupao.model.User;
+import com.lmeng.yupao.model.domain.User;
 import com.lmeng.yupao.service.UserService;
 import com.lmeng.yupao.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;

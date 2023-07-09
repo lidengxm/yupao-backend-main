@@ -1,13 +1,11 @@
 package com.lmeng.yupao.once;
-import java.util.Date;
 
 import com.lmeng.yupao.mapper.UserMapper;
-import com.lmeng.yupao.model.User;
+import com.lmeng.yupao.model.domain.User;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
 
 import javax.annotation.Resource;
-import javax.jws.soap.SOAPBinding;
 
 /**
  * @version 1.0

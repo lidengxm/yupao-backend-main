@@ -1,9 +1,7 @@
 package com.lmeng.yupao.service;
 
-import com.lmeng.yupao.model.User;
-import net.bytebuddy.matcher.FilterableList;
+import com.lmeng.yupao.model.domain.User;
 import org.junit.Assert;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 

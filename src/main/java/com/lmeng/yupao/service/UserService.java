@@ -1,6 +1,6 @@
 package com.lmeng.yupao.service;
 
-import com.lmeng.yupao.model.User;
+import com.lmeng.yupao.model.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import javax.servlet.http.HttpServletRequest;

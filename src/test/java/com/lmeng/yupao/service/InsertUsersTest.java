@@ -1,7 +1,6 @@
 package com.lmeng.yupao.service;
 
-import com.lmeng.yupao.mapper.UserMapper;
-import com.lmeng.yupao.model.User;
+import com.lmeng.yupao.model.domain.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.util.StopWatch;

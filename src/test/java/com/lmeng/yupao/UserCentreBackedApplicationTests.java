@@ -1,7 +1,7 @@
 package com.lmeng.yupao;
 
 import com.lmeng.yupao.mapper.UserMapper;
-import com.lmeng.yupao.model.User;
+import com.lmeng.yupao.model.domain.User;
 import com.lmeng.yupao.service.UserService;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;

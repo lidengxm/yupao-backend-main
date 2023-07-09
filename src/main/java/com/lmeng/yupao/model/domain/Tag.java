@@ -1,4 +1,4 @@
-package com.lmeng.yupao.model;
+package com.lmeng.yupao.model.domain;
 
 import com.baomidou.mybatisplus.annotation.*;
 

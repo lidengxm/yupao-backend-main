@@ -7,7 +7,7 @@ import com.lmeng.yupao.common.BaseResponse;
 import com.lmeng.yupao.common.ErrorCode;
 import com.lmeng.yupao.common.ResultUtils;
 import com.lmeng.yupao.exceeption.BaseException;
-import com.lmeng.yupao.model.User;
+import com.lmeng.yupao.model.domain.User;
 import com.lmeng.yupao.model.request.UserLoginRequest;
 import com.lmeng.yupao.model.request.UserRegisterRequest;
 import com.lmeng.yupao.service.UserService;
@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.lmeng.yupao.constant.UserConstant.ADDMIN_ROLE;
 import static com.lmeng.yupao.constant.UserConstant.USER_LOGIN_STATE;
 
 

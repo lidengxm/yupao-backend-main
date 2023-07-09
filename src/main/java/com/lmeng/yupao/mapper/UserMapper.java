@@ -1,8 +1,7 @@
 package com.lmeng.yupao.mapper;
 
-import com.lmeng.yupao.model.User;
+import com.lmeng.yupao.model.domain.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import org.apache.ibatis.annotations.Mapper;
 
 /**
 * @author 26816

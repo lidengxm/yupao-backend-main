@@ -1,7 +1,7 @@
 package com.lmeng.yupao.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.lmeng.yupao.model.Tag;
+import com.lmeng.yupao.model.domain.Tag;
 import com.lmeng.yupao.service.TagService;
 import com.lmeng.yupao.mapper.TagMapper;
 import org.springframework.stereotype.Service;
