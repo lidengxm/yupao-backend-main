@@ -9,12 +9,13 @@ import com.lmeng.yupao.exceeption.BaseException;
 import com.lmeng.yupao.model.domain.Team;
 import com.lmeng.yupao.model.domain.User;
 import com.lmeng.yupao.model.dto.TeamQuery;
-import com.lmeng.yupao.model.request.TeamRequest;
+import com.lmeng.yupao.model.request.TeamAddRequest;
+import com.lmeng.yupao.model.request.TeamJoinRequest;
+import com.lmeng.yupao.model.request.TeamUpdateRequest;
+import com.lmeng.yupao.model.vo.TeamUserVO;
 import com.lmeng.yupao.service.TeamService;
 import com.lmeng.yupao.service.UserService;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 
 import org.springframework.web.bind.annotation.*;
@@ -41,14 +42,14 @@ public class TeamController {
     private TeamService teamService;
 
     @PostMapping("/add")
-    public BaseResponse<Boolean> addTeam(@RequestBody TeamRequest teamRequest, HttpServletRequest request) {
-        if(teamRequest == null) {
+    public BaseResponse<Boolean> addTeam(@RequestBody TeamAddRequest teamAddRequest, HttpServletRequest request) {
+        if(teamAddRequest == null) {
             throw new BaseException(ErrorCode.NULL_ERROR);
         }
         //这里不需要再判断当前登录用户是否为空，在getLoginUser方法中已经验证过了
         User loginUser = userService.getLoginUser(request);
         Team team = new Team();
-        BeanUtils.copyProperties(teamRequest,team);
+        BeanUtils.copyProperties(teamAddRequest,team);
         long teamId = teamService.addTeam(team,loginUser);
         return ResultUtils.success(teamId);
     }
@@ -66,13 +67,14 @@ public class TeamController {
     }
 
     @PostMapping("/update")
-    public BaseResponse<Boolean> updateTeam(@RequestBody Team team) {
-        if(team == null) {
+    public BaseResponse<Boolean> updateTeam(@RequestBody TeamUpdateRequest teamUpdateRequest, HttpServletRequest request) {
+        if(teamUpdateRequest == null) {
             throw new BaseException(ErrorCode.NULL_ERROR);
         }
-        boolean result = teamService.updateById(team);
+        User loginUser = userService.getLoginUser(request);
+        boolean result = teamService.updateTeam(teamUpdateRequest,loginUser);
         if(!result) {
-            throw new BaseException(ErrorCode.PARAMS_ERROR);
+            throw new BaseException(ErrorCode.PARAMS_ERROR,"更新失败");
         }
         return ResultUtils.success(true);
     }
@@ -90,14 +92,11 @@ public class TeamController {
     }
 
     @GetMapping("/list")
-    public BaseResponse<List<Team>> listTeams(TeamQuery teamQuery) {
+    public BaseResponse<List<Team>> listTeams(TeamQuery teamQuery,boolean isAdmin) {
         if(teamQuery == null) {
             throw new BaseException(ErrorCode.NULL_ERROR,"请求参数为空");
         }
-        Team team = new Team();
-        BeanUtils.copyProperties(team,teamQuery);
-        QueryWrapper<Team> queryWrapper = new QueryWrapper<>(team);
-        List<Team> teamList = teamService.list(queryWrapper);
+        List<TeamUserVO> teamList = teamService.listTeams(teamQuery,isAdmin);
         return ResultUtils.success(teamList);
     }
 
@@ -112,5 +111,15 @@ public class TeamController {
         QueryWrapper<Team> queryWrapper = new QueryWrapper<>(team);
         Page<Team> resultPage = teamService.page(page, queryWrapper);
         return ResultUtils.success(resultPage);
+    }
+
+    @PostMapping("/join")
+    public BaseResponse<Team> joinTeam(@RequestBody TeamJoinRequest teamJoinRequest,HttpServletRequest request) {
+        if(teamJoinRequest == null) {
+            throw new BaseException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        boolean result = teamService.joinTeam(teamJoinRequest,loginUser);
+        return ResultUtils.success(result);
     }
 }

@@ -43,7 +43,7 @@ public class SwaggerConfig {
 
     private ApiInfo adminApiInfo(){
         return new ApiInfoBuilder()
-                .title("yupao用户中心")
+                .title("yupao伙伴匹配")
                 .description("yupao接口文档")
                 .version("1.0")
                 .contact(new Contact("yupao","http://baidu.com","728831102@qq.com"))

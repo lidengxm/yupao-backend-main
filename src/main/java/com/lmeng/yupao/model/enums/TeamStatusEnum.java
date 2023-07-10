@@ -15,7 +15,9 @@ public enum TeamStatusEnum {
         if (value == null){
             return null;
         }
+        //获取TeamStatusEnum的所有枚举数组
         TeamStatusEnum[] values = TeamStatusEnum.values();
+        //遍历数组中的每个枚举值teamStatusEnum
         for (TeamStatusEnum teamStatusEnum: values){
             if (teamStatusEnum.getValue()==value) {
                 return teamStatusEnum;

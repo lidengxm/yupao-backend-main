@@ -1,22 +1,20 @@
-package com.lmeng.yupao.model.request;
+package com.lmeng.yupao.model.vo;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
- * @version 1.0
- * @learner Lmeng
- * @date 2023/7/9
+ * 队伍和用户信息封装类（脱敏）
  */
 @Data
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class TeamRequest {
+public class TeamUserVO implements Serializable {
+    private static final long serialVersionUID = 163478861968488713L;
     /**
      * id
      */
@@ -54,10 +52,27 @@ public class TeamRequest {
     private Integer status;
 
     /**
-     * 密码
+     * 创建时间
      */
-    private String password;
+    private Date createTime;
 
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
+    /**
+     * 更新时间
+     */
+    private Date updateTime;
+
+    /**
+     * 已加入的用户数
+     */
+    private Integer hasJoinNum;
+
+    /**
+     * 是否加入队伍
+     */
+    private boolean hasJoin = false;
+
+    /**
+     * 创建人
+     */
+    private UserVO createUser;
 }
