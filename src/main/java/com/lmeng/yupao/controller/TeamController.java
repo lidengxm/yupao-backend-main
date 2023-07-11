@@ -2,6 +2,7 @@ package com.lmeng.yupao.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fasterxml.jackson.databind.ser.Serializers;
 import com.lmeng.yupao.common.BaseResponse;
 import com.lmeng.yupao.common.ErrorCode;
 import com.lmeng.yupao.common.ResultUtils;
@@ -9,9 +10,7 @@ import com.lmeng.yupao.exceeption.BaseException;
 import com.lmeng.yupao.model.domain.Team;
 import com.lmeng.yupao.model.domain.User;
 import com.lmeng.yupao.model.dto.TeamQuery;
-import com.lmeng.yupao.model.request.TeamAddRequest;
-import com.lmeng.yupao.model.request.TeamJoinRequest;
-import com.lmeng.yupao.model.request.TeamUpdateRequest;
+import com.lmeng.yupao.model.request.*;
 import com.lmeng.yupao.model.vo.TeamUserVO;
 import com.lmeng.yupao.service.TeamService;
 import com.lmeng.yupao.service.UserService;
@@ -55,19 +54,20 @@ public class TeamController {
     }
 
     @PostMapping("/delete")
-    public BaseResponse<Boolean> deleteTeam(@RequestBody Long id) {
-        if(id <= 0) {
-            throw new BaseException(ErrorCode.NULL_ERROR);
+    public BaseResponse<Boolean> deleteTeam(@RequestBody long teamId, HttpServletRequest request) {
+        if(teamId <= 0) {
+            throw new BaseException(ErrorCode.PARAMS_ERROR);
         }
-        boolean result = teamService.removeById(id);
+        User loginUser = userService.getLoginUser(request);
+        boolean result = teamService.deleteTeam(teamId,loginUser);
         if(!result) {
-            throw new BaseException(ErrorCode.PARAMS_ERROR,"删除失败");
+            throw new BaseException(ErrorCode.PARAMS_ERROR,"删除队伍失败");
         }
         return ResultUtils.success(true);
     }
 
     @PostMapping("/update")
-    public BaseResponse<Boolean> updateTeam(@RequestBody TeamUpdateRequest teamUpdateRequest, HttpServletRequest request) {
+    public BaseResponse<Team> updateTeam(@RequestBody TeamUpdateRequest teamUpdateRequest, HttpServletRequest request) {
         if(teamUpdateRequest == null) {
             throw new BaseException(ErrorCode.NULL_ERROR);
         }
@@ -120,6 +120,16 @@ public class TeamController {
         }
         User loginUser = userService.getLoginUser(request);
         boolean result = teamService.joinTeam(teamJoinRequest,loginUser);
+        return ResultUtils.success(result);
+    }
+
+    @PostMapping("/exit")
+    public BaseResponse<Team> exitTeam(@RequestBody TeamExitRequest teamExitRequest,HttpServletRequest request) {
+        if(teamExitRequest == null) {
+            throw new BaseException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        boolean result = teamService.exitTeam(teamExitRequest,loginUser);
         return ResultUtils.success(result);
     }
 }

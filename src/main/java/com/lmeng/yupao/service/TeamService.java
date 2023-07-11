@@ -1,15 +1,15 @@
 package com.lmeng.yupao.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.lmeng.yupao.common.BaseResponse;
 import com.lmeng.yupao.model.domain.Team;
 import com.lmeng.yupao.model.domain.User;
 import com.lmeng.yupao.model.dto.TeamQuery;
+import com.lmeng.yupao.model.request.TeamDeleteRequest;
+import com.lmeng.yupao.model.request.TeamExitRequest;
 import com.lmeng.yupao.model.request.TeamJoinRequest;
 import com.lmeng.yupao.model.request.TeamUpdateRequest;
 import com.lmeng.yupao.model.vo.TeamUserVO;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
@@ -51,4 +51,21 @@ public interface TeamService extends IService<Team> {
      * @return
      */
     boolean joinTeam(TeamJoinRequest teamJoinRequest, User loginUser);
+
+    /**
+     * 用户退出队伍
+     * @param teamExitRequest
+     * @param loginUser
+     * @return
+     */
+    boolean exitTeam(TeamExitRequest teamExitRequest, User loginUser);
+
+    /**
+     * 删除队伍（解散队伍）
+     *
+     * @param teamId
+     * @param loginUser
+     * @return
+     */
+    boolean deleteTeam(long teamId, User loginUser);
 }
