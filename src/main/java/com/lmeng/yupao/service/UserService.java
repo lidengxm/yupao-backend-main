@@ -1,7 +1,9 @@
 package com.lmeng.yupao.service;
 
+import com.lmeng.yupao.common.BaseResponse;
 import com.lmeng.yupao.model.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.lmeng.yupao.model.vo.UserVO;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -37,4 +39,7 @@ public interface UserService extends IService<User> {
     //判断用户是否是管理员
     boolean isAdmin(HttpServletRequest request);
     boolean isAdmin(User loginUser);
+
+    //匹配用户
+    List<User> matchUsers(long num, User loginUser);
 }

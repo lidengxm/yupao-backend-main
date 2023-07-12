@@ -10,6 +10,7 @@ import com.lmeng.yupao.exceeption.BaseException;
 import com.lmeng.yupao.model.domain.User;
 import com.lmeng.yupao.model.request.UserLoginRequest;
 import com.lmeng.yupao.model.request.UserRegisterRequest;
+import com.lmeng.yupao.model.vo.UserVO;
 import com.lmeng.yupao.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -131,6 +132,7 @@ public class UserController {
     }
 
     @GetMapping("/recommend")
+    //TODO
     public BaseResponse<Page<User>> recommend(long pageNum, long pageSize, HttpServletRequest request) {
         //先获取登录的用户
         User loginUser = userService.getLoginUser(request);
@@ -174,6 +176,22 @@ public class UserController {
         }
         boolean flag = userService.removeById(id);
         return ResultUtils.success(flag);
+    }
+
+    /**
+     * 获取最匹配用户
+     * @param num
+     * @param request
+     * @return
+     */
+    @GetMapping("/match")
+    public List<User> matchUsers(long num, HttpServletRequest request) {
+        if(num <= 0 || num > 20) {
+            throw new BaseException(ErrorCode.PARAMS_ERROR,"请求数量不合法！");
+        }
+        User loginUser = userService.getLoginUser(request);
+        return userService.matchUsers(num,loginUser);
+
     }
 
 

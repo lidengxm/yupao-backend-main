@@ -124,12 +124,16 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
             if (id != null && id > 0) {
                 queryWrapper.eq("id", id);
             }
-
-            String searchKey = teamQuery.getSearchKey();
+            //查询idList中的id
+            List<Long> idList = teamQuery.getIdList();
+            if(CollectionUtils.isNotEmpty(idList)) {
+                queryWrapper.in("id",idList);
+            }
+            String searchTaxt = teamQuery.getSearchText();
             //获取查询关键词，根据查询关键词进行查询
-            if(StringUtils.isNotBlank(searchKey)) {
-                queryWrapper.and(qw -> qw.like("name",searchKey).or().
-                        like("description",searchKey));
+            if(StringUtils.isNotBlank(searchTaxt)) {
+                queryWrapper.and(qw -> qw.like("name",searchTaxt).or().
+                        like("description",searchTaxt));
             }
             String name = teamQuery.getName();
             //根据队伍名称进行查询
@@ -158,11 +162,11 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
             if(teamStatusEnum == null) {
                 teamStatusEnum = TeamStatusEnum.PUBLIC;
             }
-
             //如果不是管理员用户而且队伍非公开就抛出异常
             if(!isAdmin && !teamStatusEnum.equals(TeamStatusEnum.PUBLIC)) {
                 throw new BaseException(ErrorCode.NO_AUTH);
             }
+            queryWrapper.eq("status",teamStatusEnum.getValue());
         }
 
         //不展示过期的队伍 expireTime is not null && expireTime > now()
@@ -370,7 +374,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         userTeamQueryWrapper.eq("teamId", teamId);
         boolean remove = userTeamService.remove(userTeamQueryWrapper);
         if(!remove) {
-            throw new BaseException(ErrorCode.PARAMS_ERROR,"删除队伍-用户表关联信息");
+            throw new BaseException(ErrorCode.PARAMS_ERROR,"删除队伍-用户表关联信息失败");
         }
         //4.删除队伍表中的队伍信息
         return this.removeById(teamId);

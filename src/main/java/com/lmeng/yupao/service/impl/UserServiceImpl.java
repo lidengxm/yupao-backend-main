@@ -11,6 +11,8 @@ import com.lmeng.yupao.exceeption.BaseException;
 import com.lmeng.yupao.model.domain.User;
 import com.lmeng.yupao.service.UserService;
 import com.lmeng.yupao.mapper.UserMapper;
+import com.lmeng.yupao.utils.AlgorithmUtils;
+import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -319,6 +321,63 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public boolean isAdmin(User loginUser) {
         return loginUser != null && loginUser.getUserRole() == UserConstant.ADMIN_ROLE;
+    }
+
+
+    @Override
+    public List<User> matchUsers(long num, User loginUser) {
+        //1.构造查询条件，查找
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("id","tags");
+        queryWrapper.isNotNull("tags");
+        List<User> userList = this.list(queryWrapper);
+
+        //2.将标签JSON格式转化为List<String>造型师
+        String tags = loginUser.getTags();
+        Gson gson = new Gson();
+        List<String> tagsList = gson.fromJson(tags, new TypeToken<List<String>>() {
+        }.getType());
+        List<Pair<User, Long>> list = new ArrayList<>();
+        //用户列表的下标和相似度集合
+        //SortedMap<Integer,Long> indexDistanceMap = new TreeMap<>();
+        for (int i = 0; i < userList.size(); i++) {
+            User user = userList.get(i);
+            String userTags = user.getTags();
+            //无标签或者是当前用户自己就跳过查询
+            if(StringUtils.isBlank(userTags) || user.getId().equals(loginUser.getId())) {
+                continue;
+            }
+            //将JSON格式的标签列表转为String集合形式
+            List<String> userTagsList = gson.fromJson(userTags,new TypeToken<List<String>>() {
+            }.getType());
+            long distance = AlgorithmUtils.minDistance(tagsList, userTagsList);
+            list.add(new Pair<>(user,distance));
+        }
+        //按照编辑距离从小到大
+        List<Pair<User, Long>> topUserPairList = list.stream()
+                .sorted((a, b) -> (int) (a.getValue() - b.getValue()))
+                .limit(num).collect(Collectors.toList());
+        //原本顺序的userId列表
+        List<Long> userIdList = topUserPairList.stream()
+                .map(pair -> pair.getKey().getId())
+                .collect(Collectors.toList());
+        //根据id列表查询，找出所有
+        QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
+        userQueryWrapper.in("id", userIdList);
+        // 1, 3, 2
+        // User1、User2、User3
+        // 1 => User1, 2 => User2, 3 => User3
+        //把id提取出来作为查询的条件
+        Map<Long, List<User>> userIdUserListMap = this.list(userQueryWrapper)
+                .stream()
+                .map(user -> getSafetyUser(user))
+                .collect(Collectors.groupingBy(User::getId));
+        //根据 userIdList 中的元素顺序，从 userIdUserListMap 中获取对应的用户列表，并将每个列表的第一个用户添加到 finalUserList中
+        List<User> finalUserList = new ArrayList<>();
+        for (Long userId : userIdList) {
+            finalUserList.add(userIdUserListMap.get(userId).get(0));
+        }
+        return finalUserList;
     }
 
 }
