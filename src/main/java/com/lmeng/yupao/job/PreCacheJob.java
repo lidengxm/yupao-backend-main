@@ -38,7 +38,7 @@ public class PreCacheJob {
     private List<Long> mainUserList = Arrays.asList();
 
     //每天8点整定时执行预热用户信息
-    @Scheduled(cron = "0 48 13 * * *")
+    @Scheduled(cron = "0 0 8 * * *")
     public void doPreCacheJob() {
         //Redisson实现分布式锁
         RLock lock = redissonClient.getLock("yupao:preCacheJob:doPreCache:lock");

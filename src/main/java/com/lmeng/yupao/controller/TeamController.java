@@ -2,7 +2,6 @@ package com.lmeng.yupao.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fasterxml.jackson.databind.ser.Serializers;
 import com.lmeng.yupao.common.BaseResponse;
 import com.lmeng.yupao.common.DeleteRequest;
 import com.lmeng.yupao.common.ErrorCode;
@@ -23,6 +22,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.jws.soap.SOAPBinding;
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
@@ -78,7 +78,7 @@ public class TeamController {
     }
 
     @PostMapping("/update")
-    public BaseResponse<Team> updateTeam(TeamUpdateRequest teamUpdateRequest, HttpServletRequest request) {
+    public BaseResponse<Team> updateTeam(@RequestBody TeamUpdateRequest teamUpdateRequest, HttpServletRequest request) {
         if(teamUpdateRequest == null) {
             throw new BaseException(ErrorCode.NULL_ERROR);
         }
@@ -128,7 +128,19 @@ public class TeamController {
                 boolean hasJoin = hasJoinTeamList.contains(team.getId());
                 team.setHasJoin(hasJoin);
             });
-        } catch (Exception e) {}
+        } catch (Exception e) { }
+
+        //3.关联查询加入队伍的用户信息（人数）
+        QueryWrapper<UserTeam> teamQueryWrapper = new QueryWrapper<>();
+        teamQueryWrapper.in("teamId",teamIdList);
+        //根据teamIdList查询出用户-队伍集合
+        List<UserTeam> userTeamList = userTeamService.list(teamQueryWrapper);
+        //将用户-队伍集合按照teamId进行分组得到map集合
+        Map<Long, List<UserTeam>> teamIdUserTeamList = userTeamList.stream()
+                .collect(Collectors.groupingBy(UserTeam::getTeamId));
+        //从teamIdUserTeamList获取对应的userTeam列表，得到的列表大小（元素个数）设为已加入人数
+        teamList.forEach(team -> team.setHasJoinNum(teamIdUserTeamList
+                .getOrDefault(team.getId(),new ArrayList<>()).size()));
         return ResultUtils.success(teamList);
     }
 

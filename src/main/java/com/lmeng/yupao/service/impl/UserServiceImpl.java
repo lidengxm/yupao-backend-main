@@ -249,7 +249,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @param tagNameList
      * @return
      */
-    @Deprecated
+//    @Deprecated
+    @Override
     public List<User> searchByTagsBySQL(List<String> tagNameList) {
         if(CollectionUtils.isEmpty(tagNameList)) {
             throw new BaseException(ErrorCode.PARAMS_ERROR);
@@ -270,9 +271,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @param tagNameList
      * @return
      */
-    @Override
+    //@Override
     public List<User> searchByTags(List<String> tagNameList) {
-        //内存查询
         //1.先查询所有用户
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         List<User> userList = userMapper.selectList(queryWrapper);
@@ -281,15 +281,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //改成并发，stream改成paralleStream并行流，但用的公共线程池不安全
         return userList.stream().filter(user -> {
             String tagStr = user.getTags();
-            //如果从数据中返回的值是空就直接返回
+            //如果用户的标签字符串为空就直接返回false，用户不满足过滤条件
             if(StringUtils.isBlank(tagStr)) {
                 return false;
             }
-            //将JSON类型字符串转换成Set<String>类型
+            //将JSON类型字符串转换成Set<String>类型的临时标签名列表
             Set<String> tempTagNameList = gson.fromJson(tagStr, new TypeToken<Set<String>>() {}.getType());
+            //对得到的标签名列表进行非空判断，为空就给默认值(空的HashSet)
             tempTagNameList = Optional.ofNullable(tempTagNameList).orElse(new HashSet<>());
-            for (String tagName : tempTagNameList) {
-                if(tempTagNameList.contains(tagName)) {
+            //遍历标签名列表，并判断是否包含当前标签名
+            for (String tagName : tagNameList) {
+                if(!tempTagNameList.contains(tagName)) {
                     return false;
                 }
             }

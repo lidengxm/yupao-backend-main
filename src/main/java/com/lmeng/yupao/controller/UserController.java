@@ -10,7 +10,6 @@ import com.lmeng.yupao.exceeption.BaseException;
 import com.lmeng.yupao.model.domain.User;
 import com.lmeng.yupao.model.request.UserLoginRequest;
 import com.lmeng.yupao.model.request.UserRegisterRequest;
-import com.lmeng.yupao.model.vo.UserVO;
 import com.lmeng.yupao.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -60,8 +59,6 @@ public class UserController {
             throw new BaseException(ErrorCode.PARAMS_ERROR,"账号或密码或星球编号为空");
         }
         long result = userService.userRegister(userAccount, password, checkPassword,plannetCode);
-
-       // return new BaseResponse<>(0,result,"OK");
         return ResultUtils.success(result);
     }
 
@@ -78,7 +75,6 @@ public class UserController {
             throw new BaseException(ErrorCode.PARAMS_ERROR,"账号或密码为空");
         }
         User user = userService.userLogin(userAccount, userPassword, request);
-        //return new BaseResponse<>(0,user,"OK");
         return ResultUtils.success(user);
 
     }
@@ -127,12 +123,11 @@ public class UserController {
         if(CollectionUtils.isEmpty(tagNameList)) {
             throw new BaseException(ErrorCode.NULL_ERROR);
         }
-        List<User> userList = userService.searchByTags(tagNameList);
+        List<User> userList = userService.searchByTagsBySQL(tagNameList);
         return ResultUtils.success(userList);
     }
 
     @GetMapping("/recommend")
-    //TODO
     public BaseResponse<Page<User>> recommend(long pageNum, long pageSize, HttpServletRequest request) {
         //先获取登录的用户
         User loginUser = userService.getLoginUser(request);
