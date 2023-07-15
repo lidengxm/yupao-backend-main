@@ -83,7 +83,7 @@ public class User implements Serializable {
     /**
      * 星球编号
      */
-    private String plannetCode;
+    private String planetCode;
 
     /**
      * 标签

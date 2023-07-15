@@ -40,7 +40,7 @@ public class InsertUsers {
              user.setEmail("66556");
              user.setUserStatus(0);
              user.setPhone("895645");
-             user.setPlannetCode("22365");
+             user.setPlanetCode("22365");
              user.setTags("[]");
              user.setProfile("你好");
          }

@@ -1,5 +1,6 @@
 package com.lmeng.yupao.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
@@ -8,7 +9,9 @@ import com.lmeng.yupao.common.ErrorCode;
 import com.lmeng.yupao.common.ResultUtils;
 import com.lmeng.yupao.exceeption.BaseException;
 import com.lmeng.yupao.model.domain.User;
+import com.lmeng.yupao.model.request.UpdateTagRequest;
 import com.lmeng.yupao.model.request.UserLoginRequest;
+import com.lmeng.yupao.model.request.UserQueryRequest;
 import com.lmeng.yupao.model.request.UserRegisterRequest;
 import com.lmeng.yupao.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +22,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -45,47 +50,53 @@ public class UserController {
     private RedisTemplate<String,Object> redisTemplate;
 
     @PostMapping("/register")
-    public BaseResponse<Long> userRegistry(@RequestBody UserRegisterRequest userRegisterRequest) {
-        if(userRegisterRequest == null) {
-            throw new BaseException(ErrorCode.NOT_LOGIN,"");
+    public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
+        if (userRegisterRequest == null) {
+            throw new BaseException(ErrorCode.PARAMS_ERROR);
         }
+        String username = userRegisterRequest.getUsername();
         String userAccount = userRegisterRequest.getUserAccount();
-        String password = userRegisterRequest.getPassword();
+        String userPassword = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
-        String plannetCode = userRegisterRequest.getPlannetCode();
-
-        //先做一个简单校验
-        if(StringUtils.isAnyBlank(userAccount,password,checkPassword,plannetCode)) {
-            throw new BaseException(ErrorCode.PARAMS_ERROR,"账号或密码或星球编号为空");
+        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
+            throw new BaseException(ErrorCode.PARAMS_ERROR);
         }
-        long result = userService.userRegister(userAccount, password, checkPassword,plannetCode);
-        return ResultUtils.success(result);
+        long result = userService.userRegister(username, userAccount, userPassword, checkPassword);
+        return ResultUtils.success(result, "注册成功");
     }
 
     @PostMapping("/login")
-    public BaseResponse<User> userLogin(@RequestBody UserLoginRequest userRegisterRequest, HttpServletRequest request) {
-        if(userRegisterRequest == null) {
+    public BaseResponse<User> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
+        if(userLoginRequest == null) {
             throw new BaseException(ErrorCode.NOT_LOGIN,"");
         }
-        String userAccount = userRegisterRequest.getUserAccount();
-        String userPassword = userRegisterRequest.getUserPassword();
-
+        String userAccount = userLoginRequest.getUserAccount();
+        String userPassword = userLoginRequest.getUserPassword();
         //先做一个简单校验
         if(StringUtils.isAnyBlank(userAccount,userPassword)) {
             throw new BaseException(ErrorCode.PARAMS_ERROR,"账号或密码为空");
         }
         User user = userService.userLogin(userAccount, userPassword, request);
-        return ResultUtils.success(user);
+        return ResultUtils.success(user,"登录成功");
 
     }
 
     @PostMapping("/logout")
-    public BaseResponse<Integer> userLogout(HttpServletRequest request) {
-        if(request == null) {
-            throw new BaseException(ErrorCode.PARAMS_ERROR,"");
+    public BaseResponse<Boolean> userLogout(String id,HttpServletRequest request) {
+        if (request == null) {
+            throw new BaseException(ErrorCode.PARAMS_ERROR);
         }
-        int i = userService.userLogout(request);
-        return ResultUtils.success(i);
+        Boolean result = userService.userLogout(id, request);
+        return ResultUtils.success(result);
+    }
+
+    @GetMapping("/{id}")
+    public BaseResponse<User> getUserById(@PathVariable("id") Integer id) {
+        if (id == null) {
+            throw new BaseException(ErrorCode.PARAMS_ERROR);
+        }
+        User user = this.userService.getById(id);
+        return ResultUtils.success(user);
     }
 
     @GetMapping("/current")
@@ -97,33 +108,30 @@ public class UserController {
         }
         long userId = currentUser.getId();
         User user = userService.getById(userId);
-        //TODO 校验用户是否合法
-        User user1 = userService.getSafetyUser(user);
-        return ResultUtils.success(user1);
+        //校验用户是否合法
+        return ResultUtils.success(userService.getSafetyUser(user));
     }
 
     @GetMapping("/search")
-    public BaseResponse<List<User>> searchUsers(String username,HttpServletRequest request) {
+    public BaseResponse<List<User>> searchUsers(UserQueryRequest userQueryRequest, HttpServletRequest request) {
         //先鉴权，仅管理员可以查询
         if(!userService.isAdmin(request)) {
             throw new BaseException(ErrorCode.NO_AUTH,"该用户权限不够");
         }
         //查询数据库
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        if(StringUtils.isNotBlank(username)) {
-            queryWrapper.like("username",username);
-        }
-        List<User> userList = userService.list(queryWrapper);
-        List<User> list = userList.stream().map(user -> userService.getSafetyUser(user)).collect(Collectors.toList());
-        return ResultUtils.success(list);
+        String searchText = userQueryRequest.getSearchText();
+        LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.like(User::getUsername, searchText).or().like(User::getProfile, searchText);
+        List<User> userList = userService.list(lambdaQueryWrapper);
+        return ResultUtils.success(userList);
     }
 
     @GetMapping("/search/tags")
-    public BaseResponse<List<User>> searchUserByTags(@RequestParam(required = false)  List<String> tagNameList) {
+    public BaseResponse<List<User>> searchUserByTags(@RequestParam(required = false) Set<String> tagNameList) {
         if(CollectionUtils.isEmpty(tagNameList)) {
             throw new BaseException(ErrorCode.NULL_ERROR);
         }
-        List<User> userList = userService.searchByTagsBySQL(tagNameList);
+        List<User> userList = userService.searchByTags(tagNameList);
         return ResultUtils.success(userList);
     }
 
@@ -151,7 +159,7 @@ public class UserController {
     }
 
     @PostMapping("/update")
-    public BaseResponse<User> updateById(@RequestBody User user,HttpServletRequest request) {
+    public BaseResponse<Integer> updateById(@RequestBody User user,HttpServletRequest request) {
         //如果用户不存在
         if(user == null) {
             throw new BaseException(ErrorCode.PARAMS_ERROR);
@@ -159,6 +167,17 @@ public class UserController {
         User loginUser = userService.getLoginUser(request);
         int result = userService.updateUser(user, loginUser);
         return ResultUtils.success(result);
+    }
+
+    @PostMapping("/update/tags")
+    public BaseResponse<Integer> updateTagById(@RequestBody UpdateTagRequest tagRequest, HttpServletRequest request) {
+        if (tagRequest == null) {
+            throw new BaseException(ErrorCode.PARAMS_ERROR);
+        }
+        User currentUser = userService.getLoginUser(request);
+        int updateTag = userService.updateTagById(tagRequest, currentUser);
+        redisTemplate.delete(userService.redisFormat(currentUser.getId()));
+        return ResultUtils.success(updateTag);
     }
 
     @PostMapping("/delete")

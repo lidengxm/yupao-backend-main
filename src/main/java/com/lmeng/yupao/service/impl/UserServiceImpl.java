@@ -9,18 +9,24 @@ import com.lmeng.yupao.common.ErrorCode;
 import com.lmeng.yupao.constant.UserConstant;
 import com.lmeng.yupao.exceeption.BaseException;
 import com.lmeng.yupao.model.domain.User;
+import com.lmeng.yupao.model.request.UpdateTagRequest;
 import com.lmeng.yupao.service.UserService;
 import com.lmeng.yupao.mapper.UserMapper;
 import com.lmeng.yupao.utils.AlgorithmUtils;
 import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -39,49 +45,47 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private UserMapper userMapper;
 
     //盐值，混淆密码
-    private final String SALT = "yupi";
+    private final String SALT = "my";
 
-    //private final static String USER_LOGIN_STATE = "user login state";
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 用户注册
      * @param userAccount
-     * @param password
+     * @param userPassword
      * @param checkPassword
      * @return
      */
     @Override
-    public long userRegister(String userAccount, String password, String checkPassword, String plannetCode) {
+    public long userRegister(String username, String userAccount, String userPassword, String checkPassword) {
         //1.校验
-        if(StringUtils.isAnyBlank(userAccount,password,checkPassword,plannetCode)) {
-            // todo 后面封装成异常类
-            throw new BaseException(ErrorCode.PARAMS_ERROR,"参数为空");
+        if(StringUtils.isAnyBlank(username,userAccount,userPassword,checkPassword)) {
+            throw new BaseException(ErrorCode.PARAMS_ERROR,"参数不能为空");
         }
-        if(userAccount.length() < 4) {
-            throw new BaseException(ErrorCode.PARAMS_ERROR,"用户账号过短");
+        if(userAccount.length() < 4 || userAccount.length() > 15) {
+            throw new BaseException(ErrorCode.PARAMS_ERROR,"用户账号不能小于4位或大于15位");
         }
-        if(password.length() < 8 && checkPassword.length() < 8) {
-            throw new BaseException(ErrorCode.PARAMS_ERROR,"两次密码不一致");
+        if (!StringUtils.isAnyBlank(username) && username.length() > 20) {
+            throw new BaseException(ErrorCode.PARAMS_ERROR, "昵称不能超过20个字符");
         }
-
-        if(plannetCode.length() > 5) {
-            throw new BaseException(ErrorCode.PARAMS_ERROR,"星球编号过长");
+        if(userPassword.length() < 8 && checkPassword.length() < 8) {
+            throw new BaseException(ErrorCode.PARAMS_ERROR,"密码小于8位");
         }
 
-        //账号中不能有特殊字符
-        //String validPattern = "||pP|\\pS|\\s+";
+        //2.校验账号中不能有特殊字符
         String validPattern = "[`~!@#$%^&*()+=|{}':;',\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
         if(matcher.find()) {
-            throw new BaseException(ErrorCode.PARAMS_ERROR,"用户参数错误");
+            throw new BaseException(ErrorCode.PARAMS_ERROR,"账号中不能含有特殊字符");
         }
 
-        //密码和校验密码是否一致
-        if(!password.equals(checkPassword)) {
+        //3.校验密码和二次密码是否一致
+        if(!userPassword.equals(checkPassword)) {
             throw new BaseException(ErrorCode.PARAMS_ERROR,"两次密码不一致");
         }
 
-        //校验账号不能重复（放在校验账号密码之后，可以省去账号密码不符合要求时的查询数据库操作）
+        //4.校验账号不能重复（放在校验账号密码之后，可以省去账号密码不符合要求时的查询数据库操作）
         QueryWrapper<User> queryWrapper  = new QueryWrapper<>();
         queryWrapper.eq("userAccount", userAccount);
         long count = userMapper.selectCount(queryWrapper);
@@ -89,27 +93,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BaseException(ErrorCode.PARAMS_ERROR,"账号重复");
         }
 
-        //星球编号不能重复
-        QueryWrapper<User> queryWrapper1  = new QueryWrapper<>();
-        queryWrapper1.eq("plannetCode", plannetCode);
-        long count1 = userMapper.selectCount(queryWrapper1);
-        if(count > 0) {
-            throw new BaseException(ErrorCode.PARAMS_ERROR,"星球编号重复");
-        }
-
-        //2.加密
-        String SecondPassword = DigestUtils.md5DigestAsHex((SALT + password).getBytes());
+        //5.加密
+        String SecondPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes(StandardCharsets.UTF_8));
 
         //3.插入数据
         User user = new User();
         user.setUserAccount(userAccount);
         user.setUserPassword(SecondPassword);
-        user.setPlannetCode(plannetCode);
+        //新注册的用户上传默认头像
+        user.setAvatarUrl("https://alylmengbucket.oss-cn-nanjing.aliyuncs.com/pictures/202307091458096.webp");
         boolean flag = this.save(user);
         if(!flag) {
             throw new BaseException(ErrorCode.PARAMS_ERROR,"注册失败");
         }
-
         return user.getId();
     }
 
@@ -134,7 +130,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         //账号中不能有特殊字符
-        //String validPattern = "||pP|\\pS|\\s+";
         String validPattern = "[`~!@#$%^&*()+=|{}':;',\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
         if(matcher.find()) {
@@ -158,9 +153,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User safetyUser = getSafetyUser(user);
 
         //4.记录用户的登录状态
+        String redisKey = String.format(USER_LOGIN_STATE + safetyUser.getId());
+        ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
+        valueOperations.set(redisKey, safetyUser, 30, TimeUnit.MINUTES);
         request.getSession().setAttribute(USER_LOGIN_STATE,safetyUser);
-
-        return user;
+        return safetyUser;
     }
 
     /**
@@ -181,7 +178,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         safetyUser.setGender(orignUser.getGender());
         safetyUser.setEmail(orignUser.getEmail());
         safetyUser.setUserStatus(0);
-        safetyUser.setPlannetCode(orignUser.getPlannetCode());
+        safetyUser.setPlanetCode(orignUser.getPlanetCode());
         safetyUser.setUserRole(orignUser.getUserRole());
         safetyUser.setPhone(orignUser.getPhone());
         safetyUser.setCreateTime(new Date());
@@ -209,15 +206,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     /**
      * 用户注销
+     *
      * @param request
-     * @return
      */
     @Override
-    public int userLogout(HttpServletRequest request) {
-        //移除登录态
-        request.getSession().removeAttribute(USER_LOGIN_STATE);
-        return 1;
+    public Boolean userLogout(String id, HttpServletRequest request) {
+        // 移除登录态
+        String redisKey = String.format(USER_LOGIN_STATE + id);
+        log.info(redisKey);
+        Boolean delete = redisTemplate.delete(redisKey);
+        return delete;
     }
+
 
     /**
      * 修改用户
@@ -249,15 +249,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @param tagNameList
      * @return
      */
-//    @Deprecated
-    @Override
+    @Deprecated
     public List<User> searchByTagsBySQL(List<String> tagNameList) {
         if(CollectionUtils.isEmpty(tagNameList)) {
             throw new BaseException(ErrorCode.PARAMS_ERROR);
         }
         //SQL查询
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        //拼接and查询
+        //拼接and查询 AND (tags LIKE ? AND tags LIKE ?)
         for (String tagName : tagNameList) {
             queryWrapper = queryWrapper.like("tags",tagName);
         }
@@ -272,7 +271,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @return
      */
     //@Override
-    public List<User> searchByTags(List<String> tagNameList) {
+    public List<User> searchByTags(Set<String> tagNameList) {
+        if(CollectionUtils.isEmpty(tagNameList)) {
+            throw new BaseException(ErrorCode.PARAMS_ERROR);
+        }
         //1.先查询所有用户
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         List<User> userList = userMapper.selectList(queryWrapper);
@@ -289,6 +291,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             Set<String> tempTagNameList = gson.fromJson(tagStr, new TypeToken<Set<String>>() {}.getType());
             //对得到的标签名列表进行非空判断，为空就给默认值(空的HashSet)
             tempTagNameList = Optional.ofNullable(tempTagNameList).orElse(new HashSet<>());
+            //tempTagNameList集合中每一个元素首字母转换为大写
+            tempTagNameList.stream().map(StringUtils::capitalize).collect(Collectors.toList());
             //遍历标签名列表，并判断是否包含当前标签名
             for (String tagName : tagNameList) {
                 if(!tempTagNameList.contains(tagName)) {
@@ -380,6 +384,54 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             finalUserList.add(userIdUserListMap.get(userId).get(0));
         }
         return finalUserList;
+    }
+
+    @Override
+    public String redisFormat(Long key) {
+        return String.format("yupao:user:search:%s", key);
+    }
+
+    /**
+     * 流处理
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int updateTagById(UpdateTagRequest updateTag, User currentUser) {
+        long id = updateTag.getId();
+        if (id <= 0) {
+            throw new BaseException(ErrorCode.PARAMS_ERROR, "该用户不存在");
+        }
+        Set<String> newTags = updateTag.getTagList();
+        if (newTags.size() > 12) {
+            throw new BaseException(ErrorCode.PARAMS_ERROR, "最多设置12个标签");
+        }
+        if (!isAdmin(currentUser) && id != currentUser.getId()) {
+            throw new BaseException(ErrorCode.NO_AUTH, "无权限");
+        }
+        User user = userMapper.selectById(id);
+        Gson gson = new Gson();
+        Set<String> oldTags = gson.fromJson(user.getTags(), new TypeToken<Set<String>>() {
+        }.getType());
+        Set<String> oldTagsCapitalize = toCapitalize(oldTags);
+        Set<String> newTagsCapitalize = toCapitalize(newTags);
+
+        // 添加 newTagsCapitalize 中 oldTagsCapitalize 中不存在的元素
+        oldTagsCapitalize.addAll(newTagsCapitalize.stream().filter(tag -> !oldTagsCapitalize.contains(tag)).collect(Collectors.toSet()));
+        // 移除 oldTagsCapitalize 中 newTagsCapitalize 中不存在的元素
+        oldTagsCapitalize.removeAll(oldTagsCapitalize.stream().filter(tag -> !newTagsCapitalize.contains(tag)).collect(Collectors.toSet()));
+        String tagsJson = gson.toJson(oldTagsCapitalize);
+        user.setTags(tagsJson);
+        return userMapper.updateById(user);
+    }
+
+    /**
+     * String类型集合首字母大写
+     *
+     * @param oldSet 原集合
+     * @return 首字母大写的集合
+     */
+    private Set<String> toCapitalize(Set<String> oldSet) {
+        return oldSet.stream().map(StringUtils::capitalize).collect(Collectors.toSet());
     }
 
 }

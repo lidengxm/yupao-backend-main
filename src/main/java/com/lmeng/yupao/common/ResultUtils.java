@@ -11,13 +11,16 @@ package com.lmeng.yupao.common;
  */
 public class ResultUtils {
     //成功
-    public static <T> BaseResponse success(T data) {
-        return new BaseResponse(0,data,"ok");
+    public static <T> BaseResponse success(T data,String message) {
+        return new BaseResponse(0,data,message,"ok");
+    }
+
+    public static <T> BaseResponse<T> success(T data) {
+        return new BaseResponse<>(0, data, "ok", "");
     }
 
     //失败
     public static BaseResponse error(ErrorCode errorCode) {
-        //return new BaseResponse(errorCode.getCode(),null,errorCode.getMessage(),errorCode.getDescription());
         return new BaseResponse(errorCode);
     }
 

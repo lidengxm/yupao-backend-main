@@ -22,7 +22,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import javax.jws.soap.SOAPBinding;
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,7 +50,7 @@ public class TeamController {
     private UserTeamService userTeamService;
 
     @PostMapping("/add")
-    public BaseResponse<Boolean> addTeam(@RequestBody TeamAddRequest teamAddRequest, HttpServletRequest request) {
+    public BaseResponse<Long> addTeam(@RequestBody TeamAddRequest teamAddRequest, HttpServletRequest request) {
         if(teamAddRequest == null) {
             throw new BaseException(ErrorCode.NULL_ERROR);
         }
@@ -78,7 +77,7 @@ public class TeamController {
     }
 
     @PostMapping("/update")
-    public BaseResponse<Team> updateTeam(@RequestBody TeamUpdateRequest teamUpdateRequest, HttpServletRequest request) {
+    public BaseResponse<Boolean> updateTeam(@RequestBody TeamUpdateRequest teamUpdateRequest, HttpServletRequest request) {
         if(teamUpdateRequest == null) {
             throw new BaseException(ErrorCode.NULL_ERROR);
         }
@@ -103,7 +102,7 @@ public class TeamController {
     }
 
     @GetMapping("/list")
-    public BaseResponse<List<Team>> listTeams(TeamQuery teamQuery,HttpServletRequest request) {
+    public BaseResponse<List<TeamUserVO>> listTeams(TeamQuery teamQuery,HttpServletRequest request) {
         if(teamQuery == null) {
             throw new BaseException(ErrorCode.NULL_ERROR,"请求参数为空");
         }
@@ -158,7 +157,7 @@ public class TeamController {
     }
 
     @PostMapping("/join")
-    public BaseResponse<Team> joinTeam(@RequestBody TeamJoinRequest teamJoinRequest,HttpServletRequest request) {
+    public BaseResponse<Boolean> joinTeam(@RequestBody TeamJoinRequest teamJoinRequest,HttpServletRequest request) {
         if(teamJoinRequest == null) {
             throw new BaseException(ErrorCode.PARAMS_ERROR);
         }
@@ -168,7 +167,7 @@ public class TeamController {
     }
 
     @PostMapping("/exit")
-    public BaseResponse<Team> exitTeam(@RequestBody TeamExitRequest teamExitRequest,HttpServletRequest request) {
+    public BaseResponse<Boolean> exitTeam(@RequestBody TeamExitRequest teamExitRequest,HttpServletRequest request) {
         if(teamExitRequest == null) {
             throw new BaseException(ErrorCode.PARAMS_ERROR);
         }
