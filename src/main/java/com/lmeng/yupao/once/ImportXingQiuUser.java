@@ -9,14 +9,11 @@ import java.util.stream.Collectors;
 
 /**
  * 导入星球用户到数据库
- *
- * @author <a href="https://github.com/liyupi">程序员鱼皮</a>
- * @from <a href="https://yupi.icu">编程导航知识星球</a>
  */
 public class ImportXingQiuUser {
 
     public static void main(String[] args) {
-        // todo 记得改为自己的测试文件
+        //改为自己的测试文件
         String fileName = "D:\\Coding workspace\\UserCenterProject\\yupao-backend-main\\src\\main\\resources\\prodExcel.xlsx";
         // 这里 需要指定读用哪个class去读，然后读取第一个sheet 同步读取会自动finish
         List<XingQiuTableUserInfo> userInfoList =

@@ -1,7 +1,7 @@
   # DataSource Config
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://47.98.35.101:3306/user_centre
+    url: jdbc:mysql://124.220.222.98:3306/pro-yupao
     username: root
     password: hsp
   #session失效时间

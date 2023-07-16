@@ -3,6 +3,7 @@ package com.lmeng.yupao.service;
 import com.lmeng.yupao.model.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.lmeng.yupao.model.request.UpdateTagRequest;
+import com.lmeng.yupao.model.vo.UserVO;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -90,7 +91,12 @@ public interface UserService extends IService<User> {
      */
     boolean isAdmin(User loginUser);
 
-    //匹配用户
+    /**
+     * 匹配用户
+     * @param num
+     * @param loginUser
+     * @return
+     */
     List<User> matchUsers(long num, User loginUser);
 
     /**
@@ -110,4 +116,11 @@ public interface UserService extends IService<User> {
      * @return
      */
     int updateTagById(UpdateTagRequest updateTag, User currentUser);
+
+    /**
+     * 获取当前用户信息
+     * @param id
+     * @return
+     */
+    UserVO getUserById(Long userId, Long loginUserId);
 }

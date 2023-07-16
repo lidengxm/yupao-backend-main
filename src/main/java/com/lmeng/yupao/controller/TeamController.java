@@ -16,6 +16,8 @@ import com.lmeng.yupao.model.vo.TeamUserVO;
 import com.lmeng.yupao.service.TeamService;
 import com.lmeng.yupao.service.UserService;
 import com.lmeng.yupao.service.UserTeamService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 
@@ -38,6 +40,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/team")
 @CrossOrigin(origins = {"http://localhost:3000"} )
 @Slf4j
+@Api(tags = "队伍管理模块")
 public class TeamController {
 
     @Resource
@@ -50,6 +53,7 @@ public class TeamController {
     private UserTeamService userTeamService;
 
     @PostMapping("/add")
+    @ApiOperation(value = "创建队伍")
     public BaseResponse<Long> addTeam(@RequestBody TeamAddRequest teamAddRequest, HttpServletRequest request) {
         if(teamAddRequest == null) {
             throw new BaseException(ErrorCode.NULL_ERROR);
@@ -63,6 +67,7 @@ public class TeamController {
     }
 
     @PostMapping("/delete")
+    @ApiOperation(value = "删除队伍")
     public BaseResponse<Boolean> deleteTeam(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
         if(deleteRequest == null || deleteRequest.getId() <= 0) {
             throw new BaseException(ErrorCode.PARAMS_ERROR);
@@ -77,6 +82,7 @@ public class TeamController {
     }
 
     @PostMapping("/update")
+    @ApiOperation(value = "更新队伍")
     public BaseResponse<Boolean> updateTeam(@RequestBody TeamUpdateRequest teamUpdateRequest, HttpServletRequest request) {
         if(teamUpdateRequest == null) {
             throw new BaseException(ErrorCode.NULL_ERROR);
@@ -90,6 +96,7 @@ public class TeamController {
     }
 
     @GetMapping("/get")
+    @ApiOperation(value = "查看队伍")
     public BaseResponse<Team> getTeam( Long id) {
         if(id <= 0) {
             throw new BaseException(ErrorCode.PARAMS_ERROR,"请求参数错误");
@@ -102,6 +109,7 @@ public class TeamController {
     }
 
     @GetMapping("/list")
+    @ApiOperation(value = "查看队伍")
     public BaseResponse<List<TeamUserVO>> listTeams(TeamQuery teamQuery,HttpServletRequest request) {
         if(teamQuery == null) {
             throw new BaseException(ErrorCode.NULL_ERROR,"请求参数为空");
@@ -144,6 +152,7 @@ public class TeamController {
     }
 
     @GetMapping("/list/page")
+    @ApiOperation(value = "分页查询队伍")
     public BaseResponse<Page<Team>> listTeamsByPages(TeamQuery teamQuery) {
         if(teamQuery == null) {
             throw new BaseException(ErrorCode.NULL_ERROR,"请求参数为空");
@@ -157,6 +166,7 @@ public class TeamController {
     }
 
     @PostMapping("/join")
+    @ApiOperation(value = "加入队伍")
     public BaseResponse<Boolean> joinTeam(@RequestBody TeamJoinRequest teamJoinRequest,HttpServletRequest request) {
         if(teamJoinRequest == null) {
             throw new BaseException(ErrorCode.PARAMS_ERROR);
@@ -167,6 +177,7 @@ public class TeamController {
     }
 
     @PostMapping("/exit")
+    @ApiOperation(value = "退出队伍")
     public BaseResponse<Boolean> exitTeam(@RequestBody TeamExitRequest teamExitRequest,HttpServletRequest request) {
         if(teamExitRequest == null) {
             throw new BaseException(ErrorCode.PARAMS_ERROR);
@@ -183,6 +194,7 @@ public class TeamController {
      * @return
      */
     @GetMapping("/list/my/create")
+    @ApiOperation(value = "查看我创建的队伍")
     public BaseResponse<List<TeamUserVO>> listMyCreateTeams(TeamQuery teamQuery,HttpServletRequest request) {
         if(teamQuery == null) {
             throw new BaseException(ErrorCode.NULL_ERROR,"请求参数为空");
@@ -200,6 +212,7 @@ public class TeamController {
      * @return
      */
     @GetMapping("/list/my/join")
+    @ApiOperation(value = "查看我加入的队伍")
     public BaseResponse<List<TeamUserVO>> listMyJoinTeams(TeamQuery teamQuery,HttpServletRequest request) {
         if(teamQuery == null) {
             throw new BaseException(ErrorCode.NULL_ERROR,"请求参数为空");

@@ -40,7 +40,7 @@ public class InsertUsersTest {
             user.setEmail("66556");
             user.setUserStatus(0);
             user.setPhone("895645");
-            user.setPlannetCode("22365");
+            user.setPlanetCode("22365");
             user.setTags("[]");
             user.setProfile("你好");
         }
@@ -77,7 +77,7 @@ public class InsertUsersTest {
                 user.setEmail("12331234@qq.com");
                 user.setUserStatus(0);
                 user.setUserRole(0);
-                user.setPlannetCode("213123");
+                user.setPlanetCode("213123");
                 user.setTags("[]");
                 userList.add(user);
                 if (j % batchSize==0){

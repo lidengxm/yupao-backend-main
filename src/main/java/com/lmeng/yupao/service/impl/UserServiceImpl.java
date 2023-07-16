@@ -1,5 +1,6 @@
 package com.lmeng.yupao.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -10,12 +11,14 @@ import com.lmeng.yupao.constant.UserConstant;
 import com.lmeng.yupao.exceeption.BaseException;
 import com.lmeng.yupao.model.domain.User;
 import com.lmeng.yupao.model.request.UpdateTagRequest;
+import com.lmeng.yupao.model.vo.UserVO;
 import com.lmeng.yupao.service.UserService;
 import com.lmeng.yupao.mapper.UserMapper;
 import com.lmeng.yupao.utils.AlgorithmUtils;
 import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
@@ -231,7 +234,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (userId <= 0) {
             throw new BaseException(ErrorCode.PARAMS_ERROR);
         }
-        // todo 补充校验，如果用户没有传任何要更新的值，就直接报错，不用执行 update 语句
         // 如果是管理员，允许更新任意用户
         // 如果不是管理员，只允许更新当前（自己的）信息
         if (!isAdmin(loginUser) && userId != loginUser.getId()) {
@@ -386,6 +388,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return finalUserList;
     }
 
+    /**
+     * 格式化字符串
+     * @param key
+     * @return
+     */
     @Override
     public String redisFormat(Long key) {
         return String.format("yupao:user:search:%s", key);
@@ -422,6 +429,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String tagsJson = gson.toJson(oldTagsCapitalize);
         user.setTags(tagsJson);
         return userMapper.updateById(user);
+    }
+
+    @Override
+    public UserVO getUserById(Long userId, Long loginUserId) {
+        User user = this.getById(userId);
+        UserVO userVO = new UserVO();
+        BeanUtils.copyProperties(user, userVO);
+        return userVO;
     }
 
     /**

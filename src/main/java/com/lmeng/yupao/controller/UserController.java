@@ -13,7 +13,11 @@ import com.lmeng.yupao.model.request.UpdateTagRequest;
 import com.lmeng.yupao.model.request.UserLoginRequest;
 import com.lmeng.yupao.model.request.UserQueryRequest;
 import com.lmeng.yupao.model.request.UserRegisterRequest;
+import com.lmeng.yupao.model.vo.UserVO;
 import com.lmeng.yupao.service.UserService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -41,6 +45,7 @@ import static com.lmeng.yupao.constant.UserConstant.USER_LOGIN_STATE;
 @RequestMapping("/user")
 @CrossOrigin(origins = {"http://localhost:3000"})
 @Slf4j
+@Api(tags = "用户管理模块")
 public class UserController {
 
     @Resource
@@ -50,6 +55,7 @@ public class UserController {
     private RedisTemplate<String,Object> redisTemplate;
 
     @PostMapping("/register")
+    @ApiOperation(value = "用户注册")
     public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
         if (userRegisterRequest == null) {
             throw new BaseException(ErrorCode.PARAMS_ERROR);
@@ -66,6 +72,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
+    @ApiOperation(value = "用户登录")
     public BaseResponse<User> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
         if(userLoginRequest == null) {
             throw new BaseException(ErrorCode.NOT_LOGIN,"");
@@ -82,6 +89,7 @@ public class UserController {
     }
 
     @PostMapping("/logout")
+    @ApiOperation(value = "用户注销")
     public BaseResponse<Boolean> userLogout(String id,HttpServletRequest request) {
         if (request == null) {
             throw new BaseException(ErrorCode.PARAMS_ERROR);
@@ -91,15 +99,21 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public BaseResponse<User> getUserById(@PathVariable("id") Integer id) {
+    @ApiOperation(value = "根据id查询用户")
+    public BaseResponse<UserVO> getUserById(@PathVariable("id") Long id,HttpServletRequest request) {
+        User loginUser = userService.getLoginUser(request);
+        if(loginUser == null) {
+            throw new BaseException(ErrorCode.PARAMS_ERROR);
+        }
         if (id == null) {
             throw new BaseException(ErrorCode.PARAMS_ERROR);
         }
-        User user = this.userService.getById(id);
+        UserVO user = this.userService.getUserById(id,loginUser.getId());
         return ResultUtils.success(user);
     }
 
     @GetMapping("/current")
+    @ApiOperation(value = "获取当前用户")
     public BaseResponse<User> getCurrentUser(HttpServletRequest request) {
         Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
         User currentUser = (User) userObj;
@@ -113,6 +127,7 @@ public class UserController {
     }
 
     @GetMapping("/search")
+    @ApiOperation(value = "搜索用户")
     public BaseResponse<List<User>> searchUsers(UserQueryRequest userQueryRequest, HttpServletRequest request) {
         //先鉴权，仅管理员可以查询
         if(!userService.isAdmin(request)) {
@@ -127,6 +142,7 @@ public class UserController {
     }
 
     @GetMapping("/search/tags")
+    @ApiOperation(value = "根据标签搜索用户")
     public BaseResponse<List<User>> searchUserByTags(@RequestParam(required = false) Set<String> tagNameList) {
         if(CollectionUtils.isEmpty(tagNameList)) {
             throw new BaseException(ErrorCode.NULL_ERROR);
@@ -136,6 +152,7 @@ public class UserController {
     }
 
     @GetMapping("/recommend")
+    @ApiOperation(value = "用户推荐")
     public BaseResponse<Page<User>> recommend(long pageNum, long pageSize, HttpServletRequest request) {
         //先获取登录的用户
         User loginUser = userService.getLoginUser(request);
@@ -151,7 +168,7 @@ public class UserController {
         userList = userService.page(new Page(pageNum,pageSize),queryWrapper);
         //写入缓存
         try {
-            valueOperations.set(redisKey,userList,10, TimeUnit.MINUTES);
+            valueOperations.set(redisKey,userList,30, TimeUnit.MINUTES);
         } catch (Exception e) {
             log.error("redis set key error",e);
         }
@@ -159,6 +176,7 @@ public class UserController {
     }
 
     @PostMapping("/update")
+    @ApiOperation(value = "用户更新")
     public BaseResponse<Integer> updateById(@RequestBody User user,HttpServletRequest request) {
         //如果用户不存在
         if(user == null) {
@@ -170,6 +188,7 @@ public class UserController {
     }
 
     @PostMapping("/update/tags")
+    @ApiOperation(value = "用户更新标签")
     public BaseResponse<Integer> updateTagById(@RequestBody UpdateTagRequest tagRequest, HttpServletRequest request) {
         if (tagRequest == null) {
             throw new BaseException(ErrorCode.PARAMS_ERROR);
@@ -181,6 +200,7 @@ public class UserController {
     }
 
     @PostMapping("/delete")
+    @ApiOperation(value = "用户删除")
     public BaseResponse<Boolean> deleteById(@RequestBody long id,HttpServletRequest request) {
         if(!userService.isAdmin(request)) {
             throw new BaseException(ErrorCode.NO_AUTH,"用户权限不够");
@@ -199,6 +219,7 @@ public class UserController {
      * @return
      */
     @GetMapping("/match")
+    @ApiOperation(value = "匹配用户模式")
     public List<User> matchUsers(long num, HttpServletRequest request) {
         if(num <= 0 || num > 20) {
             throw new BaseException(ErrorCode.PARAMS_ERROR,"请求数量不合法！");

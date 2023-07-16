@@ -12,7 +12,7 @@ import java.util.List;
  */
 public class ImportExcel {
     public static void main(String[] args) {
-        // todo 文件路径记得改为自己的测试文件
+        //文件路径记得改为自己的测试文件
         //将 Excel 文件的路径传入 readByListener 或 synchronousRead 方法进行数据读取。
         String fileName = "D:\\Coding workspace\\UserCenterProject\\yupao-backend-main\\src\\main\\resources\\testExcel.xlsx";
         readByListener(fileName);

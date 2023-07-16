@@ -37,8 +37,8 @@ public class PreCacheJob {
     //重点用户
     private List<Long> mainUserList = Arrays.asList();
 
-    //每天8点整定时执行预热用户信息
-    @Scheduled(cron = "0 0 8 * * *")
+    //每天12点整定时执行预热用户信息
+    @Scheduled(cron = "0 0 12 * * *")
     public void doPreCacheJob() {
         //Redisson实现分布式锁
         RLock lock = redissonClient.getLock("yupao:preCacheJob:doPreCache:lock");
@@ -53,7 +53,7 @@ public class PreCacheJob {
                     ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
                     //写入缓存
                     try {
-                        valueOperations.set(redisKey,userList,10, TimeUnit.MINUTES);
+                        valueOperations.set(redisKey,userList,10, TimeUnit.HOURS);
                     } catch (Exception e) {
                         log.error("redis set key error",e);
                     }
