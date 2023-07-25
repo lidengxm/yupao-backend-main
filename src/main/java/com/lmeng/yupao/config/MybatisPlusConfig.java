@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@MapperScan("com.yupi.yupao.mapper")
+@MapperScan("com.lmeng.yupao.mapper")
 public class MybatisPlusConfig {
 
     /**

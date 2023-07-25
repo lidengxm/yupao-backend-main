@@ -38,7 +38,8 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/team")
-@CrossOrigin(origins = {"http://localhost:3000"} )
+//@CrossOrigin(origins = {"http://localhost:3000"} )
+@CrossOrigin(origins = {"http://124.220.222.98"} )
 @Slf4j
 @Api(tags = "队伍管理模块")
 public class TeamController {

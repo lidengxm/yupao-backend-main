@@ -73,7 +73,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BaseException(ErrorCode.PARAMS_ERROR, "昵称不能超过20个字符");
         }
         if(userPassword.length() < 8 && checkPassword.length() < 8) {
-            throw new BaseException(ErrorCode.PARAMS_ERROR,"密码小于8位");
+            throw new BaseException(ErrorCode.PARAMS_ERROR,"密码最少8位");
         }
 
         //2.校验账号中不能有特殊字符

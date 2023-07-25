@@ -1,36 +1,48 @@
-# 伙伴匹配系统
-
 ## 项目简介
 
-一个帮助大家找到志同道合的学习伙伴的移动端网站（APP 风格）。包括用户登录注册、更新个人信息、按标签搜索用户、推荐相似用户、组队等功能。  还在继续扩展中
+ 伙伴汇，一个让大家可以找到志同道合的学习伙伴的移动端网站（APP 风格）。包括用户登录注册、更新个人信息、按标签搜索用户、推荐相似用户、组队等功能。
 
 
 
-下面是项目页面展示：
+## 项目页面展示：
 
-主页：
+伙伴汇主页：
 
-<img src="https://alylmengbucket.oss-cn-nanjing.aliyuncs.com/pictures/202306290009020.png" alt="img" style="zoom:25%;" />
-
-找伙伴：
-
-<img src="https://alylmengbucket.oss-cn-nanjing.aliyuncs.com/pictures/202306290009090.png" alt="img" style="zoom:25%;" />
-
-组队功能：
-
-<img src="https://alylmengbucket.oss-cn-nanjing.aliyuncs.com/pictures/202306290009660.png" alt="img" style="zoom:25%;" />
-
-创建队伍：
-
-<img src="https://alylmengbucket.oss-cn-nanjing.aliyuncs.com/pictures/202306290009122.png" alt="img" style="zoom:25%;" />
-
-后台管理页面：
-
-<img src="https://alylmengbucket.oss-cn-nanjing.aliyuncs.com/pictures/202306290009968.png" alt="img" style="zoom: 25%;" />
+![image-20230716112210855](https://alylmengbucket.oss-cn-nanjing.aliyuncs.com/pictures/202307161122978.png)
 
 
 
-匹配同伴项目项目基本覆盖了企业开发中常见的需求以及对应的解决方案，比如登录注册、批量数据导入、信息检索展示、定时任务、资源抢占等。并且涵盖了分布式、并发编程、锁、事务、缓存、性能优化、幂等性、数据一致性、大数据、算法等后端程序员必须了解的知识与实践。
+**搜索伙伴：**
+
+![image-20230716112326656](https://alylmengbucket.oss-cn-nanjing.aliyuncs.com/pictures/202307161123695.png)
+
+**组队功能：**
+
+![image-20230716112406963](https://alylmengbucket.oss-cn-nanjing.aliyuncs.com/pictures/202307161124009.png)
+
+
+
+**创建队伍：**
+
+![image-20230716112509972](https://alylmengbucket.oss-cn-nanjing.aliyuncs.com/pictures/202307161125006.png)
+
+
+
+**后台管理页：**
+
+![image-20230716112531487](https://alylmengbucket.oss-cn-nanjing.aliyuncs.com/pictures/202307161125528.png)
+
+
+
+**用户更新页面：**
+
+![image-20230716112548937](https://alylmengbucket.oss-cn-nanjing.aliyuncs.com/pictures/202307161125979.png)
+
+
+
+## 项目背景
+
+伙伴汇项目基本覆盖了企业开发中常见的需求以及对应的解决方案，比如登录注册、批量数据导入、信息检索展示、定时任务、资源抢占等。并且涵盖了分布式、并发编程、锁、事务、缓存、性能优化、幂等性、数据一致性、大数据、算法等后端程序员必须了解的知识与实践。
 
 从需求分析、技术选型、系统设计、前后端开发再到最后上线，整个项目全部过程。
 
@@ -120,3 +132,14 @@
 
 1. 项目优化及完善
 2. 免备案方式上线前后端
+
+
+
+
+
+
+
+
+
+
+

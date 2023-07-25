@@ -43,7 +43,8 @@ import static com.lmeng.yupao.constant.UserConstant.USER_LOGIN_STATE;
 
 @RestController
 @RequestMapping("/user")
-@CrossOrigin(origins = {"http://localhost:3000"})
+//@CrossOrigin(origins = {"http://localhost:3000"})
+@CrossOrigin(origins = {"http://124.220.222.98"} )
 @Slf4j
 @Api(tags = "用户管理模块")
 public class UserController {

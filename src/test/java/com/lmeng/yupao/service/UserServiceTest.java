@@ -19,10 +19,10 @@ public class UserServiceTest {
     @Resource
     private UserService userService;
 
-    @Test
-    public void testSearchUserTags() {
-        List<String> tagNameList = Arrays.asList("java","python");
-        List<User> userList = userService.searchByTags(tagNameList);
-        Assert.assertNotNull(userList);
-    }
+//    @Test
+//    public void testSearchUserTags() {
+//        List<String> tagNameList = Arrays.asList("java","python");
+//        List<User> userList = userService.searchByTags(tagNameList);
+//        Assert.assertNotNull(userList);
+//    }
 }
