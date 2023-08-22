@@ -1,14 +1,18 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
 spring:
   profiles:
     active: dev
   application:
-    name: usercentre
+    name: yupao
   # DataSource Config
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/usercentre
     username: root
-    password: xxx
+    password: hsp
   #Redis配置
   redis:
     port: 6379
@@ -22,10 +26,6 @@ spring:
   mvc:
     path match:
       matching-strategy: ANT_PATH_MATCHER
-server:
-  port: 8080
-  servlet:
-    context-path: /api
 # 关闭驼峰映射
 mybatis-plus:
   configuration:

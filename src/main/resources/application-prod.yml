@@ -1,26 +1,26 @@
+# 线上配置（使用域名）
 server:
     port: 8081
     servlet:
-        context-path: /api
+      context-path: /api
+      session:
+        cookie:
+          domain: reviewhub.lmeng.top
+    address: 0.0.0.0
 spring:
+  #MySQL配置
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://xxx:3306/pro_project_test
+    url: jdbc:mysql://124.220.222.98:3306/pro_project_test
     username: root
-    password: xxx
+    password: txy
   #Redis配置
   redis:
       port: 6379
-      host: xxx
+      host: 124.220.222.98
       database: 0
-      password: xxx
-      #session失效时间（timeout单位 分钟）
+      password: 123321
+  #session失效时间为一天（timeout单位 分钟）类型是Redis
   session:
       timeout: 86400
       store-type: redis
-  server:
-    address: 0.0.0.0
-mybatis-plus:
-  configuration:
-    map-underscore-to-camel-case: false
-    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl

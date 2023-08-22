@@ -1,6 +1,6 @@
 package com.lmeng.yupao.model.dto;
 
-import com.lmeng.yupao.common.PageRequest;
+import com.lmeng.yupao.model.request.PageRequest;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

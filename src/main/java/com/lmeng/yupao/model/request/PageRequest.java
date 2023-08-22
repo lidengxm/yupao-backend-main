@@ -1,4 +1,4 @@
-package com.lmeng.yupao.common;
+package com.lmeng.yupao.model.request;
 
 import lombok.Data;
 

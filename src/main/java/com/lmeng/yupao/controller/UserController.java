@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.lmeng.yupao.common.BaseResponse;
 import com.lmeng.yupao.common.ErrorCode;
 import com.lmeng.yupao.common.ResultUtils;
-import com.lmeng.yupao.exceeption.BaseException;
+import com.lmeng.yupao.exception.BaseException;
 import com.lmeng.yupao.model.domain.User;
 import com.lmeng.yupao.model.request.UpdateTagRequest;
 import com.lmeng.yupao.model.request.UserLoginRequest;
@@ -17,6 +17,7 @@ import com.lmeng.yupao.model.vo.UserVO;
 import com.lmeng.yupao.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -26,11 +27,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static com.lmeng.yupao.constant.UserConstant.USER_LOGIN_STATE;
 
@@ -44,7 +42,6 @@ import static com.lmeng.yupao.constant.UserConstant.USER_LOGIN_STATE;
 @RestController
 @RequestMapping("/user")
 //@CrossOrigin(origins = {"http://localhost:3000"})
-@CrossOrigin(origins = {"http://124.220.222.98"} )
 @Slf4j
 @Api(tags = "用户管理模块")
 public class UserController {
@@ -132,7 +129,7 @@ public class UserController {
     public BaseResponse<List<User>> searchUsers(UserQueryRequest userQueryRequest, HttpServletRequest request) {
         //先鉴权，仅管理员可以查询
         if(!userService.isAdmin(request)) {
-            throw new BaseException(ErrorCode.NO_AUTH,"该用户权限不够");
+            throw new BaseException(ErrorCode.NO_AUTH);
         }
         //查询数据库
         String searchText = userQueryRequest.getSearchText();
@@ -144,30 +141,32 @@ public class UserController {
 
     @GetMapping("/search/tags")
     @ApiOperation(value = "根据标签搜索用户")
-    public BaseResponse<List<User>> searchUserByTags(@RequestParam(required = false) Set<String> tagNameList) {
+    @ApiImplicitParams(
+            {@ApiImplicitParam(name = "tagNameList", value = "标签列表")})
+    public BaseResponse<List<User>> searchUserByTags(@RequestParam(required = false) List<String> tagNameList) {
         if(CollectionUtils.isEmpty(tagNameList)) {
-            throw new BaseException(ErrorCode.NULL_ERROR);
+            throw new BaseException(ErrorCode.NULL_ERROR,"标签为空！");
         }
-        List<User> userList = userService.searchByTags(tagNameList);
+        List<User> userList = userService.searchByTagsBySQL(tagNameList);
         return ResultUtils.success(userList);
     }
 
     @GetMapping("/recommend")
     @ApiOperation(value = "用户推荐")
     public BaseResponse<Page<User>> recommend(long pageNum, long pageSize, HttpServletRequest request) {
-        //先获取登录的用户
+        //1.先获取登录的用户
         User loginUser = userService.getLoginUser(request);
         String redisKey = String.format("yupao:user:recommend:%s",loginUser.getId());
         ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
-        //如果有缓存，就从缓存中取
+        //2.如果用户列表有缓存，就从缓存中取
         Page<User> userList = (Page<User>) valueOperations.get(redisKey);
         if(userList != null) {
             return ResultUtils.success(userList);
         }
-        //没有缓存就查询数据库，构造一个空的查询条件
+        //3.没有缓存就查询数据库，构造一个空的查询条件
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         userList = userService.page(new Page(pageNum,pageSize),queryWrapper);
-        //写入缓存
+        //将用户列表写入缓存
         try {
             valueOperations.set(redisKey,userList,30, TimeUnit.MINUTES);
         } catch (Exception e) {
@@ -215,6 +214,7 @@ public class UserController {
 
     /**
      * 获取最匹配用户
+     *
      * @param num
      * @param request
      * @return
@@ -229,8 +229,5 @@ public class UserController {
         return userService.matchUsers(num,loginUser);
 
     }
-
-
-
 
 }

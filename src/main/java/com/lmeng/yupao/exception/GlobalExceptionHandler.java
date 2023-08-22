@@ -1,4 +1,4 @@
-package com.lmeng.yupao.exceeption;
+package com.lmeng.yupao.exception;
 
 import com.lmeng.yupao.common.BaseResponse;
 import com.lmeng.yupao.common.ErrorCode;

@@ -8,8 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.annotation.Resource;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 @SpringBootTest
 class UserCentreBackedApplicationTests {
@@ -21,6 +20,11 @@ class UserCentreBackedApplicationTests {
     private UserService userService;
 
     @Test
+    void testHashMap() {
+
+    }
+
+    @Test
     void contextLoads() {
         System.out.println(("----- selectAll method test ------"));
         List<User> userList = userMapper.selectList(null);
@@ -30,6 +34,8 @@ class UserCentreBackedApplicationTests {
 
     @Test
     void testPassword() {
+        Map<String,Object> map = new HashMap<>();
+        map.put("lili",new ArrayList<>());
 
     }
 

@@ -1,5 +1,6 @@
 package com.lmeng.yupao.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lmeng.yupao.model.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.lmeng.yupao.model.request.UpdateTagRequest;
@@ -119,7 +120,8 @@ public interface UserService extends IService<User> {
 
     /**
      * 获取当前用户信息
-     * @param id
+     * @param userId
+     * @Param loginUserId
      * @return
      */
     UserVO getUserById(Long userId, Long loginUserId);

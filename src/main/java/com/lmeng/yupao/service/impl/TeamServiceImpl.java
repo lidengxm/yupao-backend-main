@@ -2,10 +2,9 @@ package com.lmeng.yupao.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lmeng.yupao.common.ErrorCode;
-import com.lmeng.yupao.exceeption.BaseException;
+import com.lmeng.yupao.exception.BaseException;
 import com.lmeng.yupao.model.domain.Team;
 import com.lmeng.yupao.mapper.TeamMapper;
 import com.lmeng.yupao.model.domain.User;
@@ -25,7 +24,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

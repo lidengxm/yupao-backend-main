@@ -11,6 +11,11 @@ public interface UserConstant {
      */
     String USER_LOGIN_STATE = "user login state";
 
+    /**
+     * 页面大小
+     */
+    long PAGE_SIZE = 8;
+
 
     /**
      * 普通权限

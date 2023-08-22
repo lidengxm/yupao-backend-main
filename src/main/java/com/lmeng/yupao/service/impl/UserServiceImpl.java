@@ -1,6 +1,5 @@
 package com.lmeng.yupao.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -8,7 +7,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.lmeng.yupao.common.ErrorCode;
 import com.lmeng.yupao.constant.UserConstant;
-import com.lmeng.yupao.exceeption.BaseException;
+import com.lmeng.yupao.exception.BaseException;
 import com.lmeng.yupao.model.domain.User;
 import com.lmeng.yupao.model.request.UpdateTagRequest;
 import com.lmeng.yupao.model.vo.UserVO;
@@ -34,8 +33,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static com.lmeng.yupao.constant.UserConstant.ADDMIN_ROLE;
-import static com.lmeng.yupao.constant.UserConstant.USER_LOGIN_STATE;
+import static com.lmeng.yupao.constant.UserConstant.*;
 
 /**
 * @author lmeng
@@ -223,7 +221,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
 
     /**
-     * 修改用户
+     * 修改用户信息
      * @param user
      * @param loginUser
      * @return
@@ -330,7 +328,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public boolean isAdmin(User loginUser) {
         return loginUser != null && loginUser.getUserRole() == UserConstant.ADMIN_ROLE;
     }
-
 
     @Override
     public List<User> matchUsers(long num, User loginUser) {
