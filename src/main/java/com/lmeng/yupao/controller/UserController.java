@@ -163,8 +163,9 @@ public class UserController {
         if(userList != null) {
             return ResultUtils.success(userList);
         }
-        //3.没有缓存就查询数据库，构造一个空的查询条件
+        //3.没有缓存就查询数据库，构造一个空的查询条件，按照星球编号查询
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.orderByAsc("planetCode");
         userList = userService.page(new Page(pageNum,pageSize),queryWrapper);
         //将用户列表写入缓存
         try {
@@ -220,7 +221,7 @@ public class UserController {
      * @return
      */
     @GetMapping("/match")
-    @ApiOperation(value = "匹配用户模式")
+    @ApiOperation(value = "匹配模式")
     public List<User> matchUsers(long num, HttpServletRequest request) {
         if(num <= 0 || num > 20) {
             throw new BaseException(ErrorCode.PARAMS_ERROR,"请求数量不合法！");

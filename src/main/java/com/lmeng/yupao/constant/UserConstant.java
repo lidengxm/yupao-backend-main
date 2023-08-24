@@ -12,6 +12,11 @@ public interface UserConstant {
     String USER_LOGIN_STATE = "user login state";
 
     /**
+     * 用户登录态hash保存时间
+     */
+    Long USER_LOGIN_STATE_TTL = 30L;
+
+    /**
      * 页面大小
      */
     long PAGE_SIZE = 8;

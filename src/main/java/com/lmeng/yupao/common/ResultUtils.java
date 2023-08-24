@@ -1,6 +1,6 @@
 package com.lmeng.yupao.common;
 
-/**
+/*
  * @version 1.0
  * @learner Lmeng
  * @date 2023/5/29

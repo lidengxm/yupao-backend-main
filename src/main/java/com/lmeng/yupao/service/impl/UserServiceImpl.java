@@ -16,6 +16,8 @@ import com.lmeng.yupao.mapper.UserMapper;
 import com.lmeng.yupao.utils.AlgorithmUtils;
 import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -99,8 +101,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         //3.插入数据
         User user = new User();
+        Random random = new Random();
+        int planetCodeInt = random.nextInt(100) + 1;  // 生成1到100之间的随机整数
         user.setUserAccount(userAccount);
         user.setUserPassword(SecondPassword);
+        user.setUsername(username);
+        //星球编号随机分配
+        user.setPlanetCode(String.valueOf(planetCodeInt));
         //新注册的用户上传默认头像
         user.setAvatarUrl("https://alylmengbucket.oss-cn-nanjing.aliyuncs.com/pictures/202307091458096.webp");
         boolean flag = this.save(user);
@@ -153,10 +160,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //3.用户脱敏
         User safetyUser = getSafetyUser(user);
 
-        //4.记录用户的登录状态
+        //4.记录用户的登录状态 hash替代String保存用户登录状态
         String redisKey = String.format(USER_LOGIN_STATE + safetyUser.getId());
-        ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
-        valueOperations.set(redisKey, safetyUser, 30, TimeUnit.MINUTES);
+        long currentTimeMillis = System.currentTimeMillis() / 1000;
+        String hashKey = String.format(safetyUser.getUserAccount() + ":" + currentTimeMillis);
+        redisTemplate.opsForHash().put(redisKey, hashKey, safetyUser);
+        redisTemplate.expire(redisKey, USER_LOGIN_STATE_TTL, TimeUnit.MINUTES);
+        //保存用户登录信息到session中
         request.getSession().setAttribute(USER_LOGIN_STATE,safetyUser);
         return safetyUser;
     }
@@ -329,22 +339,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return loginUser != null && loginUser.getUserRole() == UserConstant.ADMIN_ROLE;
     }
 
+    /**
+     * 匹配用户（根据编辑距离算法）
+     * @param num
+     * @param loginUser
+     * @return
+     */
     @Override
     public List<User> matchUsers(long num, User loginUser) {
-        //1.构造查询条件，查找
+        //1.构造查询条件，查找符合条件标签的用户列表（标签不为空）
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("id","tags");
         queryWrapper.isNotNull("tags");
         List<User> userList = this.list(queryWrapper);
 
-        //2.将标签JSON格式转化为List<String>造型师
+        //2.将登录用户的标签JSON格式转化为List<String>格式
         String tags = loginUser.getTags();
         Gson gson = new Gson();
-        List<String> tagsList = gson.fromJson(tags, new TypeToken<List<String>>() {
+        List<String> loginUserTagsList = gson.fromJson(tags, new TypeToken<List<String>>() {
         }.getType());
         List<Pair<User, Long>> list = new ArrayList<>();
         //用户列表的下标和相似度集合
         //SortedMap<Integer,Long> indexDistanceMap = new TreeMap<>();
+        //3.遍历满足标签条件的用户列表,计算出跟登录用户标签的距离
         for (int i = 0; i < userList.size(); i++) {
             User user = userList.get(i);
             String userTags = user.getTags();
@@ -355,24 +372,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             //将JSON格式的标签列表转为String集合形式
             List<String> userTagsList = gson.fromJson(userTags,new TypeToken<List<String>>() {
             }.getType());
-            long distance = AlgorithmUtils.minDistance(tagsList, userTagsList);
+            //通过编辑距离算法计算每个用户跟登录用户标签的编辑距离
+            long distance = AlgorithmUtils.minDistance(loginUserTagsList, userTagsList);
             list.add(new Pair<>(user,distance));
         }
-        //按照编辑距离从小到大
+
+        //4.按照编辑距离从小到大
         List<Pair<User, Long>> topUserPairList = list.stream()
                 .sorted((a, b) -> (int) (a.getValue() - b.getValue()))
-                .limit(num).collect(Collectors.toList());
-        //原本顺序的userId列表
+                .limit(num)
+                .collect(Collectors.toList());
+        //5.通过map映射出原本顺序的userId列表
         List<Long> userIdList = topUserPairList.stream()
                 .map(pair -> pair.getKey().getId())
                 .collect(Collectors.toList());
-        //根据id列表查询，找出所有
+        //6.根据id列表查询，找出所有满足编辑距离的用户，并返回脱敏用户信息
         QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
         userQueryWrapper.in("id", userIdList);
         // 1, 3, 2
         // User1、User2、User3
         // 1 => User1, 2 => User2, 3 => User3
-        //把id提取出来作为查询的条件
+        //把id提取出来作为排序的条件
         Map<Long, List<User>> userIdUserListMap = this.list(userQueryWrapper)
                 .stream()
                 .map(user -> getSafetyUser(user))
