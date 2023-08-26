@@ -32,7 +32,6 @@ import java.util.concurrent.TimeUnit;
 
 import static com.lmeng.yupao.constant.UserConstant.USER_LOGIN_STATE;
 
-
 /**
  * @version 1.0
  * @learner Lmeng
@@ -165,7 +164,11 @@ public class UserController {
         }
         //3.没有缓存就查询数据库，构造一个空的查询条件，按照星球编号查询
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.orderByAsc("planetCode");
+        //查询标签不为 [] 的用户 && 按照星球编号降序排序
+        //使用CAST将星球编号转为无符号整数类型再比较，不然是按照编号的ASCII码比较的
+        queryWrapper.isNotNull("tags")
+                .apply("tags NOT LIKE '%[]%'")
+                .orderByAsc("CAST(planetCode AS UNSIGNED)");
         userList = userService.page(new Page(pageNum,pageSize),queryWrapper);
         //将用户列表写入缓存
         try {

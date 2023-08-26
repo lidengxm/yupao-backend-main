@@ -350,23 +350,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //1.构造查询条件，查找符合条件标签的用户列表（标签不为空）
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("id","tags");
-        queryWrapper.isNotNull("tags");
+        //查询标签不为 [] 的用户
+        queryWrapper.isNotNull("tags")
+                .and(wrapper -> wrapper.notLike("tags", "[]"));
         List<User> userList = this.list(queryWrapper);
 
         //2.将登录用户的标签JSON格式转化为List<String>格式
         String tags = loginUser.getTags();
         Gson gson = new Gson();
-        List<String> loginUserTagsList = gson.fromJson(tags, new TypeToken<List<String>>() {
-        }.getType());
+        List<String> loginUserTagsList = gson.fromJson(tags, new TypeToken<List<String>>() {}.getType());
         List<Pair<User, Long>> list = new ArrayList<>();
+
         //用户列表的下标和相似度集合
-        //SortedMap<Integer,Long> indexDistanceMap = new TreeMap<>();
         //3.遍历满足标签条件的用户列表,计算出跟登录用户标签的距离
         for (int i = 0; i < userList.size(); i++) {
-            User user = userList.get(i);
-            String userTags = user.getTags();
+            String userTags = userList.get(i).getTags();
             //无标签或者是当前用户自己就跳过查询
-            if(StringUtils.isBlank(userTags) || user.getId().equals(loginUser.getId())) {
+            if(StringUtils.isBlank(userTags) || userList.get(i).getId().equals(loginUser.getId())) {
                 continue;
             }
             //将JSON格式的标签列表转为String集合形式
@@ -374,7 +374,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }.getType());
             //通过编辑距离算法计算每个用户跟登录用户标签的编辑距离
             long distance = AlgorithmUtils.minDistance(loginUserTagsList, userTagsList);
-            list.add(new Pair<>(user,distance));
+            list.add(new Pair<>(userList.get(i),distance));
         }
 
         //4.按照编辑距离从小到大
