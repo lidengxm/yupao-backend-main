@@ -32,8 +32,8 @@ public class RedissonConfig {
         //设置参数（生产环境和测试环境参数不同，注意修改）
         config.useSingleServer()
                 .setAddress(redisAddress)
-                .setDatabase(0);
-//                .setPassword(password);
+                .setDatabase(0)
+                .setPassword(password);
         //2.创建实例
         return Redisson.create(config);
     }

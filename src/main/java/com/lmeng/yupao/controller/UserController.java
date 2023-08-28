@@ -1,8 +1,6 @@
 package com.lmeng.yupao.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.lmeng.yupao.common.BaseResponse;
 import com.lmeng.yupao.common.ErrorCode;
@@ -22,13 +20,11 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static com.lmeng.yupao.constant.UserConstant.USER_LOGIN_STATE;
 
@@ -152,31 +148,28 @@ public class UserController {
 
     @GetMapping("/recommend")
     @ApiOperation(value = "用户推荐")
-    public BaseResponse<Page<User>> recommend(long pageNum, long pageSize, HttpServletRequest request) {
-        //1.先获取登录的用户
+    public BaseResponse<List<User>> recommend(long pageSize, long pageNum, HttpServletRequest request) {
         User loginUser = userService.getLoginUser(request);
-        String redisKey = String.format("yupao:user:recommend:%s",loginUser.getId());
-        ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
-        //2.如果用户列表有缓存，就从缓存中取
-        Page<User> userList = (Page<User>) valueOperations.get(redisKey);
-        if(userList != null) {
-            return ResultUtils.success(userList);
+        if(loginUser == null) throw new BaseException(ErrorCode.NOT_LOGIN,"用户未登录");
+
+        int left = (int) (pageSize * pageNum - pageSize);
+        int right = (int) (pageSize * pageNum);
+
+        List<User> userList = userService.getRecommendCache();
+        if (userList == null){
+            throw new BaseException(ErrorCode.SYSTEM_ERROR,"无用户信息");
         }
-        //3.没有缓存就查询数据库，构造一个空的查询条件，按照星球编号查询
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        //查询标签不为 [] 的用户 && 按照星球编号降序排序
-        //使用CAST将星球编号转为无符号整数类型再比较，不然是按照编号的ASCII码比较的
-        queryWrapper.isNotNull("tags")
-                .apply("tags NOT LIKE '%[]%'")
-                .orderByAsc("CAST(planetCode AS UNSIGNED)");
-        userList = userService.page(new Page(pageNum,pageSize),queryWrapper);
-        //将用户列表写入缓存
-        try {
-            valueOperations.set(redisKey,userList,30, TimeUnit.MINUTES);
-        } catch (Exception e) {
-            log.error("redis set key error",e);
+        if (left > userList.size()){
+            throw new BaseException(ErrorCode.PARAMS_ERROR,"无用户信息");
         }
-        return ResultUtils.success(userList);
+        //当left或right值超过了List长度
+        if (right>userList.size()){
+            right = userList.size();
+        }
+        List<User> selectedUsers = userList.subList(left, right);
+        log.info("recommend users = " + selectedUsers);
+        return ResultUtils.success(selectedUsers);
+//        return ResultUtils.success(userList.subList(left, right));
     }
 
     @PostMapping("/update")
@@ -225,13 +218,13 @@ public class UserController {
      */
     @GetMapping("/match")
     @ApiOperation(value = "匹配模式")
-    public List<User> matchUsers(long num, HttpServletRequest request) {
+    public BaseResponse<List<User>> matchUsers(long num, HttpServletRequest request) {
         if(num <= 0 || num > 20) {
             throw new BaseException(ErrorCode.PARAMS_ERROR,"请求数量不合法！");
         }
         User loginUser = userService.getLoginUser(request);
-        return userService.matchUsers(num,loginUser);
-
+        log.info("match users = " + loginUser);
+        return ResultUtils.success(userService.matchUsers(num,loginUser));
     }
 
 }

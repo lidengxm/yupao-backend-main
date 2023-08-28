@@ -125,4 +125,16 @@ public interface UserService extends IService<User> {
      * @return
      */
     UserVO getUserById(Long userId, Long loginUserId);
+
+    /**
+     * 查询数据库返回所有用户信息 同时更新缓存
+     * @return
+     */
+    List<User> getRecommend();
+
+    /**
+     * 获取用户推荐缓存
+     * @return
+     */
+    List<User> getRecommendCache();
 }

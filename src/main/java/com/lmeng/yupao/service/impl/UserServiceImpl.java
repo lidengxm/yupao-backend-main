@@ -2,10 +2,13 @@ package com.lmeng.yupao.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.lmeng.yupao.common.ErrorCode;
+import com.lmeng.yupao.common.ResultUtils;
+import com.lmeng.yupao.constant.RedisConstant;
 import com.lmeng.yupao.constant.UserConstant;
 import com.lmeng.yupao.exception.BaseException;
 import com.lmeng.yupao.model.domain.User;
@@ -14,11 +17,14 @@ import com.lmeng.yupao.model.vo.UserVO;
 import com.lmeng.yupao.service.UserService;
 import com.lmeng.yupao.mapper.UserMapper;
 import com.lmeng.yupao.utils.AlgorithmUtils;
+import io.lettuce.core.RedisClient;
 import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -36,6 +42,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.lmeng.yupao.constant.UserConstant.*;
+import static com.lmeng.yupao.utils.AlgorithmUtils.minDistance;
 
 /**
 * @author lmeng
@@ -52,6 +59,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
+
+    @Resource
+    private RedissonClient redissonClient;
 
     /**
      * 用户注册
@@ -359,9 +369,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String tags = loginUser.getTags();
         Gson gson = new Gson();
         List<String> loginUserTagsList = gson.fromJson(tags, new TypeToken<List<String>>() {}.getType());
-        List<Pair<User, Long>> list = new ArrayList<>();
 
         //用户列表的下标和相似度集合
+        List<Pair<User, Long>> list = new ArrayList<>();
         //3.遍历满足标签条件的用户列表,计算出跟登录用户标签的距离
         for (int i = 0; i < userList.size(); i++) {
             String userTags = userList.get(i).getTags();
@@ -383,9 +393,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .limit(num)
                 .collect(Collectors.toList());
         //5.通过map映射出原本顺序的userId列表
-        List<Long> userIdList = topUserPairList.stream()
-                .map(pair -> pair.getKey().getId())
-                .collect(Collectors.toList());
+        List<Long> userIdList = topUserPairList.stream().map(pair -> pair.getKey().getId()).collect(Collectors.toList());
+
         //6.根据id列表查询，找出所有满足编辑距离的用户，并返回脱敏用户信息
         QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
         userQueryWrapper.in("id", userIdList);
@@ -454,6 +463,59 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(user, userVO);
         return userVO;
+    }
+
+    /**
+     * 获取推荐用户
+     * @return
+     */
+    @Override
+    public List<User> getRecommend() {
+        //反复抢锁 保证数据一致性
+        List<User> userList = new ArrayList<>();
+        //获取锁（分布式锁）
+        RLock lock = redissonClient.getLock(RedisConstant.RECOMMEND_UPDATE_KEY);
+        try {
+            while (true){
+                //反复抢锁，保证数据一致性
+                if (lock.tryLock(0,-1, TimeUnit.MILLISECONDS)){
+                    //当前获得锁的线程的id是
+                    System.out.println("getLock"+Thread.currentThread().getId());
+                    //查询用户信息
+                    QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+                    //用户脱敏
+                    queryWrapper.select("id", "username", "userAccount"
+                            , "profile", "avatarUrl", "gender", "phone"
+                            , "email", "tags", "userRole", "updateTime", "createTime", "userStatus");
+                    userList = this.list(queryWrapper);
+                    ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
+                    //写缓存
+                    try {
+                        valueOperations.set(RedisConstant.RECOMMEND_KEY,userList,RedisConstant.RECOMMEND_KEY_TTL,TimeUnit.MINUTES);
+                    } catch (Exception e) {
+                        log.error("redis set key error",e);
+                    }
+                    return userList;
+                }
+            }
+        } catch (InterruptedException e) {
+            log.error("doCacheRecommendUser error", e);
+        }finally {
+            //只能自己释放自己的锁
+            if (lock.isHeldByCurrentThread()){
+                lock.unlock();
+            }
+        }
+        return userList;
+    }
+
+    @Override
+    public List<User> getRecommendCache() {
+        //查询缓存
+        ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
+        List<User> userList= (List<User>) valueOperations.get(RedisConstant.RECOMMEND_KEY);
+        //缓存为空，查询数据库并写入缓存,不为空返回缓存数据
+        return userList == null ? getRecommend():userList;
     }
 
     /**
